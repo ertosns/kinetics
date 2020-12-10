@@ -66,7 +66,6 @@ public:
                   const Eigen::MatrixXd& Slist) const;
 
 
-  //TODO move it to private
   inline void
   EulerStep(Eigen::VectorXd& thetalist,
                       Eigen::VectorXd& dthetalist,

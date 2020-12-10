@@ -2,10 +2,9 @@
 #include <Eigen/Dense>
 #include <vector>
 #include "gtest/gtest.h"
-#include "../include/kinetics.h"
+#include "../include/trajectory.hpp"
 
 # define M_PI           3.14159265358979323846 
-
 
 class FxTraj : public testing::Test {
   Trajectory traj;
@@ -77,7 +76,7 @@ TEST_F(FxTraj, ComputedTorqueTest) {
   double Ki = 1.2;
   double Kd = 1.1;
   
-  Eigen::VectorXd taulist = traj.ComputedTorque(thetalist, dthetalist, eint, g, Mlist, Glist, Slist, thetalistd, dthetalistd, ddthetalistd, Kp, Ki, Kd);
+  Eigen::VectorXd taulist = traj.kinetics.ComputedTorque(thetalist, dthetalist, eint, g, Mlist, Glist, Slist, thetalistd, dthetalistd, ddthetalistd, Kp, Ki, Kd);
 
   Eigen::VectorXd result(3);
   result << 133.00525246, -29.94223324, -3.03276856;
@@ -154,7 +153,7 @@ TEST_F(FxTraj, ScrewTrajectoryTest) {
 	result[2] = X23;
 	result[3] = Xend;
 
-	std::vector<Eigen::MatrixXd> traj = mr::ScrewTrajectory(Xstart, Xend, Tf, N, method);
+	std::vector<Eigen::MatrixXd> traj = traj.ScrewTrajectory(Xstart, Xend, Tf, N, method);
 
 	for (int i = 0; i < N; ++i) {
 		ASSERT_TRUE(traj[i].isApprox(result[i], 4));
@@ -192,7 +191,7 @@ TEST_F(FxTraj, CartesianTrajectoryTest) {
 	result[2] = X23;
 	result[3] = Xend;
 
-	std::vector<Eigen::MatrixXd> traj = mr::CartesianTrajectory(Xstart, Xend, Tf, N, method);
+	std::vector<Eigen::MatrixXd> traj = traj.CartesianTrajectory(Xstart, Xend, Tf, N, method);
 
 	for (int i = 0; i < N; ++i) {
 		ASSERT_TRUE(traj[i].isApprox(result[i], 4));
@@ -209,7 +208,7 @@ TEST_F(FxTraj, InverseDynamicsTrajectoryTest) {
 	int N = 1000;
 	int method = 5;
 
-	Eigen::MatrixXd traj = mr::JointTrajectory(thetastart, thetaend, Tf, N, method);
+	Eigen::MatrixXd traj = traj.JointTrajectory(thetastart, thetaend, Tf, N, method);
 	Eigen::MatrixXd thetamat = traj;
 	Eigen::MatrixXd dthetamat = Eigen::MatrixXd::Zero(N, dof);
 	Eigen::MatrixXd ddthetamat = Eigen::MatrixXd::Zero(N, dof);
@@ -277,7 +276,7 @@ TEST_F(FxTraj, InverseDynamicsTrajectoryTest) {
 		tau_timestep_mid.transpose(),
 		tau_timestep_end.transpose();
 
-	Eigen::MatrixXd taumat = mr::InverseDynamicsTrajectory(thetamat, dthetamat, ddthetamat, g, Ftipmat, Mlist, Glist, Slist);
+	Eigen::MatrixXd taumat = traj.InverseDynamicsTrajectory(thetamat, dthetamat, ddthetamat, g, Ftipmat, Mlist, Glist, Slist);
 	Eigen::MatrixXd taumat_timestep(numTest, dof);
 	taumat_timestep << taumat.row(0),
 		taumat.row(int(N / 2) - 1),
@@ -374,7 +373,7 @@ TEST_F(FxTraj, ForwardDynamicsTrajectoryTest) {
 		-0.70264871, -0.55925705, -8.16067131,
 		-0.1455669, -4.57149985, -3.43135114;
 
-	std::vector<Eigen::MatrixXd> traj = mr::ForwardDynamicsTrajectory(thetalist, dthetalist, taumat, g, Ftipmat, Mlist, Glist, Slist, dt, intRes);
+	std::vector<Eigen::MatrixXd> traj = traj.ForwardDynamicsTrajectory(thetalist, dthetalist, taumat, g, Ftipmat, Mlist, Glist, Slist, dt, intRes);
 	Eigen::MatrixXd traj_theta = traj.at(0);
 	Eigen::MatrixXd traj_dtheta = traj.at(1);
 
@@ -439,7 +438,7 @@ TEST_F(FxTraj, SimulateControlTest) {
 	int N = int(1.0*Tf / dt);
 	int method = 5;
 
-	Eigen::MatrixXd traj = mr::JointTrajectory(thetalist, thetaend, Tf, N, method);
+	Eigen::MatrixXd traj = traj.JointTrajectory(thetalist, thetaend, Tf, N, method);
 	Eigen::MatrixXd thetamatd = traj;
 	Eigen::MatrixXd dthetamatd = Eigen::MatrixXd::Zero(N, 3);
 	Eigen::MatrixXd ddthetamatd = Eigen::MatrixXd::Zero(N, 3);
@@ -518,8 +517,7 @@ TEST_F(FxTraj, SimulateControlTest) {
 		theta_timestep_mid.transpose(),
 		theta_timestep_end.transpose();
 
-	std::vector<Eigen::MatrixXd> controlTraj = mr::SimulateControl(thetalist, dthetalist, g, Ftipmat, Mlist, Glist, Slist, thetamatd, dthetamatd,
-		ddthetamatd, gtilde, Mtildelist, Gtildelist, Kp, Ki, Kd, dt, intRes);
+	std::vector<Eigen::MatrixXd> controlTraj = traj.kinetics.SimulateControl(thetalist, dthetalist, g, Ftipmat, Mlist, Glist, Slist, thetamatd, dthetamatd, ddthetamatd, gtilde, Mtildelist, Gtildelist, Kp, Ki, Kd, dt, intRes);
 	Eigen::MatrixXd traj_tau = controlTraj.at(0);
 	Eigen::MatrixXd traj_theta = controlTraj.at(1);
 	Eigen::MatrixXd traj_tau_timestep(numTest, 3);
