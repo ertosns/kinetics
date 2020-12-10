@@ -1,0 +1,58 @@
+\hypertarget{md_README_autotoc_md1}{}\doxysection{C++ Library}\label{md_README_autotoc_md1}
+This repository contains the code library accompanying \href{http://modernrobotics.org}{\texttt{ {\itshape Modern Robotics\+: Mechanics, Planning, and Control}}} (Kevin Lynch and Frank Park, Cambridge University Press 2017). The \href{https://github.com/NxRLab/ModernRobotics/blob/master/doc/MRlib.pdf}{\texttt{ user manual}} is in the doc directory of \href{https://github.com/NxRLab/ModernRobotics/}{\texttt{ main repository}}.
+
+The functions are available in\+:
+
+
+\begin{DoxyItemize}
+\item C++
+\item \href{https://github.com/NxRLab/ModernRobotics/tree/master/packages/Python}{\texttt{ Python}}
+\item \href{https://github.com/NxRLab/ModernRobotics/tree/master/packages/Matlab}{\texttt{ M\+A\+T\+L\+AB}}
+\item \href{https://github.com/NxRLab/ModernRobotics/tree/master/packages/Mathematica}{\texttt{ Mathematica}}
+\end{DoxyItemize}
+
+Each function has a commented section above it explaining the inputs required for its use as well as an example of how it can be used and what the output will be. This repository also contains a pdf document that provides an overview of the available functions using M\+A\+T\+L\+AB syntax. Functions are organized according to the chapter in which they are introduced in the book. Basic functions, such as functions to calculate the magnitude of a vector, normalize a vector, test if the value is near zero, and perform matrix operations such as multiplication and inverses, are not documented here.
+
+The primary purpose of the provided software is to be easy to read and educational, reinforcing the concepts in the book. The code is optimized neither for efficiency nor robustness.\hypertarget{md_README_autotoc_md2}{}\doxysubsection{Installation}\label{md_README_autotoc_md2}
+\hypertarget{md_README_autotoc_md3}{}\doxysubsubsection{1. Install Eigen library.}\label{md_README_autotoc_md3}
+
+\begin{DoxyItemize}
+\item On Mac 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:\string~\$ brew install eigen}
+\end{DoxyCode}
+
+\item On Linux 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:\string~\$ sudo apt-\/get install libeigen3-\/dev}
+\end{DoxyCode}
+
+\end{DoxyItemize}\hypertarget{md_README_autotoc_md4}{}\doxysubsubsection{2. Prepare build}\label{md_README_autotoc_md4}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:\string~\$ mkdir build \&\& cd build}
+\end{DoxyCode}
+
+
+By default cmake will install our build into the system directories. To define a custom install directory we simply pass it to cmake\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:build \$ cmake .. -\/DCMAKE\_INSTALL\_PREFIX=../\_install}
+\end{DoxyCode}
+
+
+Or just configure with defaults 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:build \$ cmake ..}
+\end{DoxyCode}
+
+
+Building and installing library 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:build \$ make all \&\& make install}
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md5}{}\doxysubsection{Testing the library}\label{md_README_autotoc_md5}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{foo@bar:build \$ ./lib\_test}
+\end{DoxyCode}
+ 

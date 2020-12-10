@@ -39,7 +39,4 @@ build/
 .vscode/*
 
 # remove build, and readme untill finished
-CMake*
-Make*
-*/*_test*
 README.md
