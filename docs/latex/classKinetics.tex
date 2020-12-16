@@ -1,0 +1,96 @@
+\hypertarget{classKinetics}{}\doxysection{Kinetics Class Reference}
+\label{classKinetics}\index{Kinetics@{Kinetics}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+Eigen\+::\+Vector\+Xd \mbox{\hyperlink{classKinetics_afe1555126c420aa5750ea4232d0b582d}{Inverse\+Dynamics}} (const Eigen\+::\+Vector\+Xd \&thetalist, const Eigen\+::\+Vector\+Xd \&dthetalist, const Eigen\+::\+Vector\+Xd \&ddthetalist, const Eigen\+::\+Vector\+Xd \&g, const Eigen\+::\+Vector\+Xd \&Ftip, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mlist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Glist, const Eigen\+::\+Matrix\+Xd \&Slist) const
+\begin{DoxyCompactList}\small\item\em Uses forward-\/backward Newton-\/\+Euler iterations to solve the equation\+: taulist = Mlist(thetalist) $\ast$ ddthetalist + c(thetalist, dthetalist) + g(thetalist) + Jtr(thetalist) $\ast$ Ftip. \end{DoxyCompactList}\item 
+Eigen\+::\+Vector\+Xd \mbox{\hyperlink{classKinetics_a62a825952850e6f7ccbad8acb0c5a7a2}{Forward\+Dynamics}} (const Eigen\+::\+Vector\+Xd \&thetalist, const Eigen\+::\+Vector\+Xd \&dthetalist, const Eigen\+::\+Vector\+Xd \&taulist, const Eigen\+::\+Vector\+Xd \&g, const Eigen\+::\+Vector\+Xd \&Ftip, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mlist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Glist, const Eigen\+::\+Matrix\+Xd \&Slist) const
+\begin{DoxyCompactList}\small\item\em Computes ddthetalist by solving\+: Mlist(thetalist) $\ast$ ddthetalist = taulist -\/ c(thetalist,dthetalist) \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classKinetics_a28af01ce1bd0f4cafc136a7e8824a6e4}\label{classKinetics_a28af01ce1bd0f4cafc136a7e8824a6e4}} 
+void {\bfseries Euler\+Step} (Eigen\+::\+Vector\+Xd \&thetalist, Eigen\+::\+Vector\+Xd \&dthetalist, const Eigen\+::\+Vector\+Xd \&ddthetalist, double dt) const
+\item 
+\mbox{\Hypertarget{classKinetics_a94595535188b7e420cd9b5d4f1a1aa23}\label{classKinetics_a94595535188b7e420cd9b5d4f1a1aa23}} 
+Eigen\+::\+Vector\+Xd {\bfseries Computed\+Torque} (const Eigen\+::\+Vector\+Xd \&thetalist, const Eigen\+::\+Vector\+Xd \&dthetalist, const Eigen\+::\+Vector\+Xd \&eint, const Eigen\+::\+Vector\+Xd \&g, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mlist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Glist, const Eigen\+::\+Matrix\+Xd \&Slist, const Eigen\+::\+Vector\+Xd \&thetalistd, const Eigen\+::\+Vector\+Xd \&dthetalistd, const Eigen\+::\+Vector\+Xd \&ddthetalistd, double Kp, double Ki, double Kd)
+\item 
+\mbox{\Hypertarget{classKinetics_aaffeb005fbe6fa1d5a9c5062b0dda8d9}\label{classKinetics_aaffeb005fbe6fa1d5a9c5062b0dda8d9}} 
+std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ {\bfseries Simulate\+Control} (const Eigen\+::\+Vector\+Xd \&thetalist, const Eigen\+::\+Vector\+Xd \&dthetalist, const Eigen\+::\+Vector\+Xd \&g, const Eigen\+::\+Matrix\+Xd \&Ftipmat, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mlist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Glist, const Eigen\+::\+Matrix\+Xd \&Slist, const Eigen\+::\+Matrix\+Xd \&thetamatd, const Eigen\+::\+Matrix\+Xd \&dthetamatd, const Eigen\+::\+Matrix\+Xd \&ddthetamatd, const Eigen\+::\+Vector\+Xd \&gtilde, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mtildelist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Gtildelist, double Kp, double Ki, double Kd, double dt, int int\+Res)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classKinetics_a62a825952850e6f7ccbad8acb0c5a7a2}\label{classKinetics_a62a825952850e6f7ccbad8acb0c5a7a2}} 
+\index{Kinetics@{Kinetics}!ForwardDynamics@{ForwardDynamics}}
+\index{ForwardDynamics@{ForwardDynamics}!Kinetics@{Kinetics}}
+\doxysubsubsection{\texorpdfstring{ForwardDynamics()}{ForwardDynamics()}}
+{\footnotesize\ttfamily Eigen\+::\+Vector\+Xd Kinetics\+::\+Forward\+Dynamics (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Vector\+Xd \&}]{thetalist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{dthetalist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{taulist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{g,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{Ftip,  }\item[{const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&}]{Mlist,  }\item[{const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&}]{Glist,  }\item[{const Eigen\+::\+Matrix\+Xd \&}]{Slist }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Computes ddthetalist by solving\+: Mlist(thetalist) $\ast$ ddthetalist = taulist -\/ c(thetalist,dthetalist) 
+
+
+\begin{DoxyItemize}
+\item g(thetalist) -\/ Jtr(thetalist) $\ast$ Ftip
+\end{DoxyItemize}
+
+
+\begin{DoxyParams}{Parameters}
+{\em thetalist} & n-\/vector of joint variables \\
+\hline
+{\em dthetalist} & n-\/vector of joint rates \\
+\hline
+{\em taulist} & An n-\/vector of joint forces/torques \\
+\hline
+{\em g} & Gravity vector g \\
+\hline
+{\em Ftip} & Spatial force applied by the end-\/effector expressed in frame \{n+1\} \\
+\hline
+{\em Mlist} & List of link frames \{i\} relative to \{i-\/1\} at the home position \\
+\hline
+{\em Glist} & Spatial inertia matrices Gi of the links \\
+\hline
+{\em Slist} & Screw axes Si of the joints in a space frame, in the format of a matrix with the screw axes as the columns. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+ddthetalist The resulting joint accelerations. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classKinetics_afe1555126c420aa5750ea4232d0b582d}\label{classKinetics_afe1555126c420aa5750ea4232d0b582d}} 
+\index{Kinetics@{Kinetics}!InverseDynamics@{InverseDynamics}}
+\index{InverseDynamics@{InverseDynamics}!Kinetics@{Kinetics}}
+\doxysubsubsection{\texorpdfstring{InverseDynamics()}{InverseDynamics()}}
+{\footnotesize\ttfamily Eigen\+::\+Vector\+Xd Kinetics\+::\+Inverse\+Dynamics (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Vector\+Xd \&}]{thetalist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{dthetalist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{ddthetalist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{g,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{Ftip,  }\item[{const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&}]{Mlist,  }\item[{const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&}]{Glist,  }\item[{const Eigen\+::\+Matrix\+Xd \&}]{Slist }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Uses forward-\/backward Newton-\/\+Euler iterations to solve the equation\+: taulist = Mlist(thetalist) $\ast$ ddthetalist + c(thetalist, dthetalist) + g(thetalist) + Jtr(thetalist) $\ast$ Ftip. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em thetalist} & n-\/vector of joint variables \\
+\hline
+{\em dthetalist} & n-\/vector of joint rates \\
+\hline
+{\em ddthetalist} & n-\/vector of joint accelerations \\
+\hline
+{\em g} & Gravity vector g \\
+\hline
+{\em Ftip} & Spatial force applied by the end-\/effector expressed in frame \{n+1\} \\
+\hline
+{\em Mlist} & List of link frames \{i\} relative to \{i-\/1\} at the home position \\
+\hline
+{\em Glist} & Spatial inertia matrices Gi of the links \\
+\hline
+{\em Slist} & Screw axes Si of the joints in a space frame, in the format of a matrix with the screw axes as the columns. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+taulist The n-\/vector of required joint forces/torques 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/poetry/recovery/\+M\+R/kinetics/include/kinetics.\+hpp\item 
+/home/poetry/recovery/\+M\+R/kinetics/src/kinetics.\+cpp\end{DoxyCompactItemize}

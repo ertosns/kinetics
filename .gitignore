@@ -38,6 +38,3 @@ build/
 # VSCode settings
 .vscode/*
 
-# remove build, and readme untill finished
-README.md
-CMake*

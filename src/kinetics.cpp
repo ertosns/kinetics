@@ -40,18 +40,18 @@ Kinetics::InverseDynamics(const Eigen::VectorXd& thetalist,
       Algebra::Adjoint(Algebra::MatrixExp6(Algebra::VecTose3(Ai.col(i)*-thetalist(i))) * Algebra::TransInv(Mlist[i]));
     
     Vi.col(i+1) =
-      AdTi[i] * Vi.col(i) + Ai.col(i) * dthetalist(i)
+      AdTi[i] * Vi.col(i) + Ai.col(i) * dthetalist(i);
       //TODO (res)
       // this index is different from book!;
-      Vdi.col(i+1) =
+    Vdi.col(i+1) =
       AdTi[i] * Vdi.col(i) + Ai.col(i) * ddthetalist(i)
-      + ad(Vi.col(i+1)) * Ai.col(i) * dthetalist(i); 
+      + Algebra::ad(Vi.col(i+1)) * Ai.col(i) * dthetalist(i); 
   }
   
   // backward pass
   for (int i = n-1; i >= 0; i--) {
     Fi = AdTi[i+1].transpose() * Fi + Glist[i] * Vdi.col(i+1)
-      - ad(Vi.col(i+1)).transpose() * (Glist[i] * Vi.col(i+1));
+      - Algebra::ad(Vi.col(i+1)).transpose() * (Glist[i] * Vi.col(i+1));
     taulist(i) = Fi.transpose() * Ai.col(i);
   }
   return taulist;
@@ -105,14 +105,14 @@ Kinetics::ComputedTorque(const Eigen::VectorXd& thetalist,
                          const Eigen::VectorXd& ddthetalistd,
                          double Kp, double Ki, double Kd) {
     
-  Eigen::VectorXpd e = thetalistd - thetalist;  // position err
+  Eigen::VectorXd e = thetalistd - thetalist;  // position err
   Eigen::VectorXd tau_feedforward =
-    ket.MassMatrix(thetalist, Mlist, Glist, Slist)*
+    MassMatrix(thetalist, Mlist, Glist, Slist)*
     (Kp*e + Ki * (eint + e) + Kd * (dthetalistd - dthetalist));
   
   Eigen::VectorXd Ftip = Eigen::VectorXd::Zero(6);
   Eigen::VectorXd tau_inversedyn =
-    ket.InverseDynamics(thetalist, dthetalist, ddthetalistd,
+    InverseDynamics(thetalist, dthetalist, ddthetalistd,
                     g, Ftip, Mlist, Glist, Slist);
   Eigen::VectorXd tau_computed =
     tau_feedforward + tau_inversedyn;
@@ -149,16 +149,16 @@ Kinetics::SimulateControl(const Eigen::VectorXd& thetalist,
   Eigen::VectorXd taulist;
   Eigen::VectorXd ddthetalist;
   for (int i = 0; i < n; ++i) {
-    taulist = ket.ComputedTorque(thetacurrent, dthetacurrent, eint,
+    taulist = ComputedTorque(thetacurrent, dthetacurrent, eint,
                                  gtilde, Mtildelist, Gtildelist,
                                  Slist, thetamatdT.col(i),
                                  dthetamatdT.col(i),
                                  ddthetamatdT.col(i), Kp, Ki, Kd);
     for (int j = 0; j < intRes; ++j) {
-      ddthetalist = ket.ForwardDynamics(thetacurrent, dthetacurrent,
+      ddthetalist = ForwardDynamics(thetacurrent, dthetacurrent,
                                         taulist, g, FtipmatT.col(i),
                                         Mlist, Glist, Slist);
-      ket.EulerStep(thetacurrent, dthetacurrent, ddthetalist,
+      EulerStep(thetacurrent, dthetacurrent, ddthetalist,
                 dt / intRes);
     }
     taumatT.col(i) = taulist;

@@ -1,0 +1,97 @@
+\hypertarget{classKinematics}{}\doxysection{Kinematics Class Reference}
+\label{classKinematics}\index{Kinematics@{Kinematics}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classKinematics_aa1fc4ae973e0d366828a0b84127570e7}\label{classKinematics_aa1fc4ae973e0d366828a0b84127570e7}} 
+{\bfseries Kinematics} (bool state=true)
+\item 
+Eigen\+::\+Matrix\+Xd \mbox{\hyperlink{classKinematics_aed980242ef2d00c1b968d796a72b4ca8}{Forward\+Kin}} (const Eigen\+::\+Matrix\+Xd \&M, const Eigen\+::\+Matrix\+Xd \&Slist, const Eigen\+::\+Vector\+Xd \&theta\+List)
+\begin{DoxyCompactList}\small\item\em Compute end effector frame. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classKinematics_a2193800f0a183c61470a869368611c45}{Inverse\+Kin}} (const Eigen\+::\+Matrix\+Xd \&Slist, const Eigen\+::\+Matrix\+Xd \&M, const Eigen\+::\+Matrix\+Xd \&T, Eigen\+::\+Vector\+Xd \&thetalist, double eomg, double ev)
+\begin{DoxyCompactList}\small\item\em Compute joints thetas given the end-\/effector configuration. \end{DoxyCompactList}\item 
+Eigen\+::\+Matrix\+Xd \mbox{\hyperlink{classKinematics_a8280d5418ee51508cbfd0cc68c0b5c74}{Jacobian}} (const Eigen\+::\+Matrix\+Xd \&Slist, const Eigen\+::\+Matrix\+Xd \&theta\+List)
+\begin{DoxyCompactList}\small\item\em Gives the Jacobian. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classKinematics_aefc0338e748162add273752a7cc6b7fc}\label{classKinematics_aefc0338e748162add273752a7cc6b7fc}} 
+bool {\bfseries space\+\_\+state}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classKinematics_aed980242ef2d00c1b968d796a72b4ca8}\label{classKinematics_aed980242ef2d00c1b968d796a72b4ca8}} 
+\index{Kinematics@{Kinematics}!ForwardKin@{ForwardKin}}
+\index{ForwardKin@{ForwardKin}!Kinematics@{Kinematics}}
+\doxysubsubsection{\texorpdfstring{ForwardKin()}{ForwardKin()}}
+{\footnotesize\ttfamily Eigen\+::\+Matrix\+Xd Kinematics\+::\+Forward\+Kin (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Matrix\+Xd \&}]{M,  }\item[{const Eigen\+::\+Matrix\+Xd \&}]{Slist,  }\item[{const Eigen\+::\+Vector\+Xd \&}]{theta\+List }\end{DoxyParamCaption})}
+
+
+
+Compute end effector frame. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em M,Home} & configuration of end-\/effector \\
+\hline
+{\em Slist} & joint screw axis in (space\+\_\+state by default, unless space\+\_\+state is false for body state), when the manipulator is at home position. \\
+\hline
+{\em theta\+List} & A list of joint coordinates. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+T transformation matrix representing the end-\/effector frame when the joints are at the specified coordinates 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classKinematics_a2193800f0a183c61470a869368611c45}\label{classKinematics_a2193800f0a183c61470a869368611c45}} 
+\index{Kinematics@{Kinematics}!InverseKin@{InverseKin}}
+\index{InverseKin@{InverseKin}!Kinematics@{Kinematics}}
+\doxysubsubsection{\texorpdfstring{InverseKin()}{InverseKin()}}
+{\footnotesize\ttfamily bool Kinematics\+::\+Inverse\+Kin (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Matrix\+Xd \&}]{Slist,  }\item[{const Eigen\+::\+Matrix\+Xd \&}]{M,  }\item[{const Eigen\+::\+Matrix\+Xd \&}]{T,  }\item[{Eigen\+::\+Vector\+Xd \&}]{thetalist,  }\item[{double}]{eomg,  }\item[{double}]{ev }\end{DoxyParamCaption})}
+
+
+
+Compute joints thetas given the end-\/effector configuration. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Slist} & screw axis (space\+\_\+state by default, unless space\+\_\+state is false for body state), \\
+\hline
+{\em M} & is home configuration of end-\/effector \\
+\hline
+{\em T} & is the target configuration \\
+\hline
+{\em thetalist} & the the desired joint angles to calculate \\
+\hline
+{\em eomg,ev} & are error checkers \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+boolean success flag 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classKinematics_a8280d5418ee51508cbfd0cc68c0b5c74}\label{classKinematics_a8280d5418ee51508cbfd0cc68c0b5c74}} 
+\index{Kinematics@{Kinematics}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!Kinematics@{Kinematics}}
+\doxysubsubsection{\texorpdfstring{Jacobian()}{Jacobian()}}
+{\footnotesize\ttfamily Eigen\+::\+Matrix\+Xd Kinematics\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const Eigen\+::\+Matrix\+Xd \&}]{Slist,  }\item[{const Eigen\+::\+Matrix\+Xd \&}]{theta\+List }\end{DoxyParamCaption})}
+
+
+
+Gives the Jacobian. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em Slist} & Screw axis \\
+\hline
+{\em theta\+List} & joint configuration \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+6xn Spatial Jacobian 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/poetry/recovery/\+M\+R/kinetics/include/kinematics.\+hpp\item 
+/home/poetry/recovery/\+M\+R/kinetics/src/kinematics.\+cpp\end{DoxyCompactItemize}

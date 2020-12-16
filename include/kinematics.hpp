@@ -10,7 +10,9 @@ public:
   // true for space state, false for body state
   bool space_state;
   
-  Kinematics(bool state=true);
+  Kinematics(bool state=true){
+    space_state=state;
+  }
   
   /** Compute end effector frame
    *
@@ -205,7 +207,7 @@ private:
     Eigen::VectorXd bListTemp(Blist.col(0).size());
     for (int i = thetaList.size() - 2; i >= 0; i--) {
       bListTemp << Blist.col(i + 1) * thetaList(i + 1);
-      T = T * Algebra::MatrixExp6(VecTose3(-1 * bListTemp));
+      T = T * Algebra::MatrixExp6(Algebra::VecTose3(-1 * bListTemp));
       // std::cout << "array: " << sListTemp << std::endl;
       Jb.col(i) = Algebra::Adjoint(T) * Blist.col(i);
     }

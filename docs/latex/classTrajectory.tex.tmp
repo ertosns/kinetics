@@ -1,0 +1,36 @@
+\hypertarget{classTrajectory}{}\doxysection{Trajectory Class Reference}
+\label{classTrajectory}\index{Trajectory@{Trajectory}}
+
+
+Collaboration diagram for Trajectory\+:
+% FIG 0
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classTrajectory_aea3a80ec24f43c619a56672fd03ecf97}\label{classTrajectory_aea3a80ec24f43c619a56672fd03ecf97}} 
+Eigen\+::\+Matrix\+Xd {\bfseries Joint\+Trajectory} (const Eigen\+::\+Vector\+Xd \&thetastart, const Eigen\+::\+Vector\+Xd \&thetaend, double Tf, int N, int method)
+\item 
+\mbox{\Hypertarget{classTrajectory_ae734ed75c67a7a4423e439c16f771179}\label{classTrajectory_ae734ed75c67a7a4423e439c16f771179}} 
+std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ {\bfseries Screw\+Trajectory} (const Eigen\+::\+Matrix\+Xd \&Xstart, const Eigen\+::\+Matrix\+Xd \&Xend, double Tf, int N, int method)
+\item 
+\mbox{\Hypertarget{classTrajectory_aff6b6795e1fa1ff0a5bd788b943aa93e}\label{classTrajectory_aff6b6795e1fa1ff0a5bd788b943aa93e}} 
+std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ {\bfseries Cartesian\+Trajectory} (const Eigen\+::\+Matrix\+Xd \&Xstart, const Eigen\+::\+Matrix\+Xd \&Xend, double Tf, int N, int method)
+\item 
+\mbox{\Hypertarget{classTrajectory_a5d5df4b71ddeae183c2a09aaa77d2196}\label{classTrajectory_a5d5df4b71ddeae183c2a09aaa77d2196}} 
+Eigen\+::\+Matrix\+Xd {\bfseries Inverse\+Dynamics\+Trajectory} (const Eigen\+::\+Matrix\+Xd \&thetamat, const Eigen\+::\+Matrix\+Xd \&dthetamat, const Eigen\+::\+Matrix\+Xd \&ddthetamat, const Eigen\+::\+Vector\+Xd \&g, const Eigen\+::\+Matrix\+Xd \&Ftipmat, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mlist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Glist, const Eigen\+::\+Matrix\+Xd \&Slist)
+\item 
+\mbox{\Hypertarget{classTrajectory_a11c7eb539f267e1c7a016dd3e227053a}\label{classTrajectory_a11c7eb539f267e1c7a016dd3e227053a}} 
+std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ {\bfseries Forward\+Dynamics\+Trajectory} (const Eigen\+::\+Vector\+Xd \&thetalist, const Eigen\+::\+Vector\+Xd \&dthetalist, const Eigen\+::\+Matrix\+Xd \&taumat, const Eigen\+::\+Vector\+Xd \&g, const Eigen\+::\+Matrix\+Xd \&Ftipmat, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Mlist, const std\+::vector$<$ Eigen\+::\+Matrix\+Xd $>$ \&Glist, const Eigen\+::\+Matrix\+Xd \&Slist, double dt, int int\+Res)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classTrajectory_a104fba76b3d41d73baa7a943d5620d7b}\label{classTrajectory_a104fba76b3d41d73baa7a943d5620d7b}} 
+\mbox{\hyperlink{classKinetics}{Kinetics}} {\bfseries kinetics}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/poetry/recovery/\+M\+R/kinetics/include/trajectory.\+hpp\item 
+/home/poetry/recovery/\+M\+R/kinetics/src/trajectory.\+cpp\end{DoxyCompactItemize}

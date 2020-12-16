@@ -1,8 +1,5 @@
 #include "../include/kinematics.hpp"
 
-Kinematics::Kinematics(bool state=true) {
-  space_state=state;
-}
 
 Eigen::MatrixXd
 Kinematics::ForwardKin(const Eigen::MatrixXd &M,
@@ -24,9 +21,9 @@ Kinematics::InverseKin(const Eigen::MatrixXd& Slist,
                        double eomg, double ev) {
   bool err;
   if (space_state)
-    err=IkinSpace(Slist, M, T, thealist, eomg, ev);
+    err=IKinSpace(Slist, M, T, thetalist, eomg, ev);
   else
-    err=IkinBody(Slist, M, T, thealist, eomg, ev);
+    err=IKinBody(Slist, M, T, thetalist, eomg, ev);
   return err;
 }
 

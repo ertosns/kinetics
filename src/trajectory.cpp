@@ -1,5 +1,5 @@
 #include "../include/trajectory.hpp"
-  
+
 Eigen::MatrixXd
 Trajectory::JointTrajectory(const Eigen::VectorXd& thetastart,
                             const Eigen::VectorXd& thetaend,
@@ -31,7 +31,7 @@ Trajectory::ScrewTrajectory(const Eigen::MatrixXd& Xstart,
       st = CubicTimeScaling(Tf, timegap*i);
     else
       st = QuinticTimeScaling(Tf, timegap*i);
-    Eigen::MatrixXd Ttemp = Algebra::MatrixLog6(TransInv(Xstart)*Xend);
+    Eigen::MatrixXd Ttemp = Algebra::MatrixLog6(Algebra::TransInv(Xstart)*Xend);
     traj.at(i) = Xstart * Algebra::MatrixExp6(Ttemp*st);
   }
   return traj;
@@ -132,84 +132,5 @@ Trajectory::ForwardDynamicsTrajectory(const Eigen::VectorXd& thetalist,
   JointTraj_ret.push_back(thetamatT.transpose());
   JointTraj_ret.push_back(dthetamatT.transpose());
   return JointTraj_ret;
-}
-
-Eigen::VectorXd
-Trajectory::ComputedTorque(const Eigen::VectorXd& thetalist,
-                           const Eigen::VectorXd& dthetalist,
-                           const Eigen::VectorXd& eint,
-                           const Eigen::VectorXd& g,
-                           const std::vector<Eigen::MatrixXd>& Mlist,
-                           const std::vector<Eigen::MatrixXd>& Glist,
-                           const Eigen::MatrixXd& Slist,
-                           const Eigen::VectorXd& thetalistd,
-                           const Eigen::VectorXd& dthetalistd,
-                           const Eigen::VectorXd& ddthetalistd,
-                           double Kp, double Ki, double Kd) {
-  
-  Eigen::VectorXpd e = thetalistd - thetalist;  // position err
-  Eigen::VectorXd tau_feedforward =
-    kinetics.MassMatrix(thetalist, Mlist, Glist, Slist)*
-    (Kp*e + Ki * (eint + e) + Kd * (dthetalistd - dthetalist));
-  
-  Eigen::VectorXd Ftip = Eigen::VectorXd::Zero(6);
-  Eigen::VectorXd tau_inversedyn =
-    kinetics.InverseDynamics(thetalist, dthetalist, ddthetalistd,
-                             g, Ftip, Mlist, Glist, Slist);
-  Eigen::VectorXd tau_computed =
-    tau_feedforward + tau_inversedyn;
-  return tau_computed;
-}  
-
-std::vector<Eigen::MatrixXd>
-Trajectory::SimulateControl(const Eigen::VectorXd& thetalist,
-                            const Eigen::VectorXd& dthetalist,
-                            const Eigen::VectorXd& g,
-                            const Eigen::MatrixXd& Ftipmat,
-                            const std::vector<Eigen::MatrixXd>& Mlist,
-                            const std::vector<Eigen::MatrixXd>& Glist,
-                            const Eigen::MatrixXd& Slist,
-                            const Eigen::MatrixXd& thetamatd,
-                            const Eigen::MatrixXd& dthetamatd,
-                            const Eigen::MatrixXd& ddthetamatd,
-                            const Eigen::VectorXd& gtilde,
-                            const std::vector<Eigen::MatrixXd>& Mtildelist,
-                            const std::vector<Eigen::MatrixXd>& Gtildelist,
-                            double Kp, double Ki, double Kd, double dt,
-                            int intRes) {
-  Eigen::MatrixXd FtipmatT = Ftipmat.transpose();
-  Eigen::MatrixXd thetamatdT = thetamatd.transpose();
-  Eigen::MatrixXd dthetamatdT = dthetamatd.transpose();
-  Eigen::MatrixXd ddthetamatdT = ddthetamatd.transpose();
-  int m = thetamatdT.rows();
-  int n = thetamatdT.cols();
-  Eigen::VectorXd thetacurrent = thetalist;
-  Eigen::VectorXd dthetacurrent = dthetalist;
-  Eigen::VectorXd eint = Eigen::VectorXd::Zero(m);
-  Eigen::MatrixXd taumatT = Eigen::MatrixXd::Zero(m, n);
-  Eigen::MatrixXd thetamatT = Eigen::MatrixXd::Zero(m, n);
-  Eigen::VectorXd taulist;
-  Eigen::VectorXd ddthetalist;
-  for (int i = 0; i < n; ++i) {
-    taulist = kinetics.ComputedTorque(thetacurrent, dthetacurrent, eint,
-                                      gtilde, Mtildelist, Gtildelist,
-                                      Slist, thetamatdT.col(i),
-                                      dthetamatdT.col(i),
-                                      ddthetamatdT.col(i), Kp, Ki, Kd);
-    for (int j = 0; j < intRes; ++j) {
-      ddthetalist = kinetics.ForwardDynamics(thetacurrent, dthetacurrent,
-                                             taulist, g, FtipmatT.col(i),
-                                             Mlist, Glist, Slist);
-      kinetics.EulerStep(thetacurrent, dthetacurrent, ddthetalist,
-                         dt / intRes);
-    }
-    taumatT.col(i) = taulist;
-    thetamatT.col(i) = thetacurrent;
-    eint += dt * (thetamatdT.col(i) - thetacurrent);
-  }
-  std::vector<Eigen::MatrixXd> ControlTauTraj_ret;
-  ControlTauTraj_ret.push_back(taumatT.transpose());
-  ControlTauTraj_ret.push_back(thetamatT.transpose());
-  return ControlTauTraj_ret;
 }
 

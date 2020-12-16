@@ -1,4 +1,4 @@
-#include "algebra.hpp"
+#include  "algebra.hpp"
 #include "kinetics.hpp"
 
 class Trajectory {
@@ -6,8 +6,7 @@ public:
   Kinetics kinetics;
   Trajectory() {
   }
-  Eigen::MatrixXd
-  JointTrajectory(const Eigen::VectorXd& thetastart,
+  Eigen::MatrixXd JointTrajectory(const Eigen::VectorXd& thetastart,
                   const Eigen::VectorXd& thetaend,
                   double Tf, int N, int method);
   

@@ -1,4 +1,4 @@
-#include "algebra.hpp"
+#include  "algebra.hpp"
 
 class Kinetics {
   
