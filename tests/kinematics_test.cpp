@@ -7,11 +7,12 @@
 # define M_PI           3.14159265358979323846 
 
 /** \class FxKin
-    fixture kinematics testing class
-*/
+ *  fixture kinematics testing class
+ */
 
 using namespace testing;
 
+/*
 class FxKin : public testing::Test {
 public:
   virtual void SetUp() {
@@ -21,8 +22,10 @@ public:
   Kinematics kin_s; //(true); // space frame kinematics
   Kinematics kin_b; //(false); // body frame kinematics
 };
+*/
+Eigen::MatrixXd nullmat;
 
-TEST_F(FxKin, JacobianSpaceTest) {
+TEST(KINEMATICS, JacobianSpaceTest) {
   Eigen::MatrixXd s_list(6, 3);
   s_list << 0, 0, 0,
     0, 1, -1,
@@ -30,6 +33,7 @@ TEST_F(FxKin, JacobianSpaceTest) {
     0, -0.0711, 0.0711,
     0, 0, 0,
     0, 0, -0.2795;
+  auto kin_s=Kinematics(s_list, nullmat, nullmat);
   Eigen::VectorXd theta(3);
   theta << 1.0472, 1.0472, 1.0472;
   Eigen::MatrixXd result(6, 3);
@@ -39,11 +43,11 @@ TEST_F(FxKin, JacobianSpaceTest) {
     0, -0.0355, -0.0855,
     0, -0.0615, -0.1481,
     0, 0, -0.1398;
-  Eigen::MatrixXd tmp_result = kin_s.Jacobian(s_list, theta);
+  Eigen::MatrixXd tmp_result = kin_s.Jacobian(theta);
   ASSERT_TRUE(tmp_result.isApprox(result, 4));
 }
 
-TEST_F(FxKin, JacobianBodyTest) {
+TEST(KINEMATICS, JacobianBodyTest) {
   Eigen::MatrixXd b_list(6, 3);
   b_list << 0, 0, 0,
     0, 1, -1,
@@ -51,6 +55,7 @@ TEST_F(FxKin, JacobianBodyTest) {
     0.0425, 0, 0,
     0.5515, 0, 0,
     0, -0.5515, 0.2720;
+  auto kin_b=Kinematics(nullmat, b_list, nullmat);
   Eigen::VectorXd theta(3);
   theta << 0, 0, 1.5708;
   Eigen::MatrixXd result(6, 3);
@@ -60,11 +65,11 @@ TEST_F(FxKin, JacobianBodyTest) {
     0, -0.2795, 0,
     0.2795, 0, 0,
     -0.0425, -0.2720, 0.2720;
-  Eigen::MatrixXd tmp_result = kin_b.Jacobian(b_list, theta);
+  Eigen::MatrixXd tmp_result = kin_b.Jacobian(theta);
   ASSERT_TRUE(tmp_result.isApprox(result, 4));
 }
 
-TEST_F(FxKin, FKInBodyTest) {
+TEST(KINEMATICS, FKInBodyTest) {
   Eigen::MatrixXd M(4, 4);
   M << -1, 0, 0, 0,
     0, 1, 0, 6,
@@ -77,19 +82,19 @@ TEST_F(FxKin, FKInBodyTest) {
     2, 0, 0,
     0, 1, 0,
     0, 0, 0.1;
+  auto kin_b=Kinematics(nullmat, Blist, M);
   Eigen::VectorXd thetaList(3);
   thetaList << M_PI / 2.0, 3, M_PI;
-  
   Eigen::MatrixXd result(4, 4);
   result << 0, 1, 0, -5,
     1, 0, 0, 4,
     0, 0, -1, 1.68584073,
     0, 0, 0, 1;
-  Eigen::MatrixXd FKCal = kin_b.ForwardKin(M, Blist, thetaList);
+  Eigen::MatrixXd FKCal = kin_b.ForwardKin(thetaList);
   ASSERT_TRUE(FKCal.isApprox(result, 4));
 }
 
-TEST_F(FxKin, FKInSpaceTest) {
+TEST(KINEMATICS, FKInSpaceTest) {
   Eigen::MatrixXd M(4, 4);
   M << -1, 0, 0, 0,
     0, 1, 0, 6,
@@ -102,6 +107,7 @@ TEST_F(FxKin, FKInSpaceTest) {
     4, 0, -6,
     0, 1, 0,
     0, 0, -0.1;
+  auto kin_s=Kinematics(Slist, nullmat, M);
   Eigen::VectorXd thetaList(3);
   thetaList << M_PI / 2.0, 3, M_PI;
   
@@ -110,11 +116,11 @@ TEST_F(FxKin, FKInSpaceTest) {
     1, 0, 0, 4,
     0, 0, -1, 1.68584073,
     0, 0, 0, 1;
-  Eigen::MatrixXd FKCal = kin_s.ForwardKin(M, Slist, thetaList);
+  Eigen::MatrixXd FKCal = kin_s.ForwardKin(thetaList);
   ASSERT_TRUE(FKCal.isApprox(result, 4));
 }
-
-TEST_F(FxKin, IKinBodyTest) {
+//TODO (fix) didn't call ikinbody
+TEST(KINEMATICS, IKinBodyTest) {
   Eigen::MatrixXd BlistT(3, 6);
   BlistT << 0, 0, -1, 2, 0, 0,
     0, 0, 0, 0, 1, 0,
@@ -125,6 +131,7 @@ TEST_F(FxKin, IKinBodyTest) {
     0, 1, 0, 6,
     0, 0, -1, 2,
     0, 0, 0, 1;
+  auto kin_b=Kinematics(nullmat, Blist, M);
   Eigen::Matrix4d T;
   T << 0, 1, 0, -5,
     1, 0, 0, 4,
@@ -137,12 +144,13 @@ TEST_F(FxKin, IKinBodyTest) {
   bool b_result = true;
   Eigen::VectorXd theta_result(3);
   theta_result << 1.57073819, 2.999667, 3.14153913;
-  bool iRet = kin_b.InverseKin(Blist, M, T, thetalist, eomg, ev);
+  bool iRet = kin_b.InverseKin(T, thetalist);
   ASSERT_EQ(b_result, iRet);
   ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
 }
 
-TEST_F(FxKin, IKinSpaceTest) {
+//TODO (fix) didn't call ikinspace!
+TEST(KINEMATICS, IKinSpaceTest) {
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 0, 0, 1, 4, 0, 0,
     0, 0, 0, 0, 1, 0,
@@ -153,6 +161,7 @@ TEST_F(FxKin, IKinSpaceTest) {
     0, 1, 0, 6,
     0, 0, -1, 2,
     0, 0, 0, 1;
+  auto kin_s=Kinematics(Slist, nullmat, M);
   Eigen::Matrix4d T;
   T << 0, 1, 0, -5,
     1, 0, 0, 4,
@@ -165,7 +174,7 @@ TEST_F(FxKin, IKinSpaceTest) {
   bool b_result = true;
   Eigen::VectorXd theta_result(3);
   theta_result << 1.57073783, 2.99966384, 3.1415342;
-  bool iRet = kin_s.InverseKin(Slist, M, T, thetalist, eomg, ev);
+  bool iRet = kin_s.InverseKin(T, thetalist);
   ASSERT_EQ(b_result, iRet);
   ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
 }
@@ -174,4 +183,3 @@ int main(int argc, char **args) {
   InitGoogleTest(&argc, args);
   return RUN_ALL_TESTS();
 }
-

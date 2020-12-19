@@ -1,7 +1,7 @@
 # kinetics: C++ library for Control, and Planning.
 
 
-C++ library implementation of [_Modern Robotics: Mechanics, Planning, and Control_](http://modernrobotics.org) (Kevin Lynch and Frank Park, Cambridge University Press 2017).
+C++ library implementation of [_Modern Robotics: Mechanics, Planning, and Control_](https://modernrobotics.org) (Kevin Lynch and Frank Park, Cambridge University Press 2017).
 
 functional implementation is available in Python, Matlab, Mathematica: [ Modern Robotics ](https://github.com/NxRLab/ModernRobotics/)
 

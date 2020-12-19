@@ -1,41 +1,32 @@
 #include "../include/kinematics.hpp"
 
-
 Eigen::MatrixXd
-Kinematics::ForwardKin(const Eigen::MatrixXd &M,
-                       const Eigen::MatrixXd& Slist,
-                       const Eigen::VectorXd& thetaList) {
+Kinematics::ForwardKin(const Eigen::VectorXd& thetaList) {
   Eigen::MatrixXd T;
-  if (space_state)
-    T = FKinSpace(M, Slist, thetaList);
+  if (space_frame)
+    T = FKinSpace(thetaList);
   else
-    T = FKinBody(M, Slist, thetaList);
+    T = FKinBody(thetaList);
   return T;
 }
 
 bool
-Kinematics::InverseKin(const Eigen::MatrixXd& Slist,
-                       const Eigen::MatrixXd& M,
-                       const Eigen::MatrixXd& T,
-                       Eigen::VectorXd& thetalist,
-                       double eomg, double ev) {
+Kinematics::InverseKin(const Eigen::MatrixXd& T,
+                       Eigen::VectorXd& thetaList) {
   bool err;
-  if (space_state)
-    err=IKinSpace(Slist, M, T, thetalist, eomg, ev);
+  if (space_frame)
+    err=IKinSpace(T, thetaList);
   else
-    err=IKinBody(Slist, M, T, thetalist, eomg, ev);
+    err=IKinBody(T, thetaList);
   return err;
 }
 
-
-
 Eigen::MatrixXd
-Kinematics::Jacobian(const Eigen::MatrixXd& Slist,
-                     const Eigen::MatrixXd& thetaList) {
+Kinematics::Jacobian(const Eigen::MatrixXd& thetaList) {
   Eigen::MatrixXd Jb;
-  if (space_state)
-    Jb = JacobianSpace(Slist, thetaList);
+  if (space_frame)
+    Jb = JacobianSpace(thetaList);
   else
-    Jb = JacobianBody(Slist, thetaList);
+    Jb = JacobianBody(thetaList);
   return Jb;
 }
