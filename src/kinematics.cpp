@@ -10,15 +10,14 @@ Kinematics::ForwardKin(const Eigen::VectorXd& thetaList) {
   return T;
 }
 
-bool
+Eigen::VectorXd
 Kinematics::InverseKin(const Eigen::MatrixXd& T,
-                       Eigen::VectorXd& thetaList) {
-  bool err;
+                       Eigen::VectorXd thetaList) {
   if (space_frame)
-    err=IKinSpace(T, thetaList);
+    thetaList=IKinSpace(T, thetaList);
   else
-    err=IKinBody(T, thetaList);
-  return err;
+    thetaList=IKinBody(T, thetaList);
+  return thetaList;
 }
 
 Eigen::MatrixXd

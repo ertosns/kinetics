@@ -119,7 +119,7 @@ TEST(KINEMATICS, FKInSpaceTest) {
   Eigen::MatrixXd FKCal = kin_s.ForwardKin(thetaList);
   ASSERT_TRUE(FKCal.isApprox(result, 4));
 }
-//TODO (fix) didn't call ikinbody
+
 TEST(KINEMATICS, IKinBodyTest) {
   Eigen::MatrixXd BlistT(3, 6);
   BlistT << 0, 0, -1, 2, 0, 0,
@@ -144,12 +144,10 @@ TEST(KINEMATICS, IKinBodyTest) {
   bool b_result = true;
   Eigen::VectorXd theta_result(3);
   theta_result << 1.57073819, 2.999667, 3.14153913;
-  bool iRet = kin_b.InverseKin(T, thetalist);
-  ASSERT_EQ(b_result, iRet);
+  thetalist = kin_b.InverseKin(T, thetalist);
   ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
 }
 
-//TODO (fix) didn't call ikinspace!
 TEST(KINEMATICS, IKinSpaceTest) {
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 0, 0, 1, 4, 0, 0,
@@ -174,8 +172,7 @@ TEST(KINEMATICS, IKinSpaceTest) {
   bool b_result = true;
   Eigen::VectorXd theta_result(3);
   theta_result << 1.57073783, 2.99966384, 3.1415342;
-  bool iRet = kin_s.InverseKin(T, thetalist);
-  ASSERT_EQ(b_result, iRet);
+  thetalist = kin_s.InverseKin(T, thetalist);
   ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
 }
 

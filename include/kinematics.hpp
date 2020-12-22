@@ -2,9 +2,10 @@
 #include <iostream>
 #include "algebra.hpp"
 #include <cassert>
-
+#include "logger.hpp"
 //TODO add eomg, ev to auto generated configuration file
-class Kinematics {
+//TODO add checks on the length of given matrices, and vectors for example length of thetalist must match cols of the Slist, Blist.
+class Kinematics : public Logger{
   
 public:
   //TODO move this to a general configuration file.
@@ -18,6 +19,8 @@ public:
   double eomg;
   double ev;
   Eigen::MatrixXd M;
+  int maxiterations;
+  bool log;
   /*
     note those must be resized at runtime,
     and make sure assertion isn't on.
@@ -26,20 +29,20 @@ public:
   Eigen::MatrixXd Blist;
   Kinematics(Eigen::MatrixXd _S, Eigen::MatrixXd _B,
              Eigen::MatrixXd _M, double _eomg=0.01,
-             double _ev=0.001) : M(_M), eomg(_eomg), ev(_ev) {
-    
+             double _ev=0.001, int iterations=20, bool _log=false)
+    : M(_M), eomg(_eomg), ev(_ev), log(_log) {
     space_frame= (_S.rows()>0) ? true : false;
     //TODO (res) redundancy! actually it can work without the follwoing as long as Slist, Blist isn't initialized yet, you reassign those values directly.
     int nrow,ncol;
     if (space_frame) {
-      nrow=_S.rows();
-      ncol=_S.cols();
-      Slist.resize(nrow,ncol);
+      //nrow=_S.rows();
+      //ncol=_S.cols();
+      //Slist.resize(nrow,ncol);
       Slist=_S;
     } else {
-      nrow=_B.rows();
-      ncol=_B.cols();
-      Blist.resize(nrow,ncol);
+      //nrow=_B.rows();
+      //ncol=_B.cols();
+      //Blist.resize(nrow,ncol);
       Blist=_B;
     }
     if (space_frame)
@@ -48,6 +51,18 @@ public:
     else
       //"Blist is 6 rows of corresponding (w,v)" 
       assert((Blist.rows()==6));
+    //TODO add this to a config file
+    maxiterations = iterations;    
+    //logging
+    Logger("kinematics.csv");
+    //
+    if (log) {
+      write("home configuration", M);
+      write("screw list in space frame", Slist);
+      write("screw list in body frame", Blist);
+      write("angular error", eomg);
+      write("linear error", ev);
+    }
   }
   
   /** Compute end effector frame
@@ -62,8 +77,8 @@ public:
    * @param thetalist: the the desired  joint angles to calculate
    * @return boolean success flag
    */
-  bool InverseKin(const Eigen::MatrixXd& T,
-                  Eigen::VectorXd& thetalist);
+  Eigen::VectorXd InverseKin(const Eigen::MatrixXd& T,
+                             Eigen::VectorXd thetalist);
   
   /** Gives the Jacobian
    *
@@ -80,7 +95,7 @@ private:
    * @return T Transfomation matrix representing the end-effector frame when the joints are at the specified coordinates
    */
   inline Eigen::MatrixXd
-  FKinSpace(const Eigen::VectorXd& thetaList) const {
+  FKinSpace(const Eigen::VectorXd& thetaList) const{
     Eigen::MatrixXd T = M;
     for (int i = (thetaList.size() - 1); i > -1; i--) {
       T = Algebra::MatrixExp6(Algebra::VecTose3(Slist.col(i)*thetaList(i))) * T;
@@ -104,15 +119,14 @@ private:
   
   /** Inverse Kinematics in body frame, given the mechanism configurations, IKinSpace derives the joints angles.
    *
-   * @param thetaList A list of joint coordinates.
+   * @param thetalist initial angles configuration
    * @param T Transfomation matrix representing the end-effector frame when the joints are at the specified coordinates
-   * @return err boolean True if the iteration is ended without reaching the allowable limits determined by eomg, and ev.
+   * @return thetaList A list of joint coordinates.
    */
-  inline bool IKinBody(const Eigen::MatrixXd& T,
-                       Eigen::VectorXd& thetalist) const {
+  inline Eigen::VectorXd
+  IKinBody(const Eigen::MatrixXd& T, Eigen::VectorXd thetalist) {
     int i = 0;
     //add this to the auto-generated configuration file
-    int maxiterations = 20;
     Eigen::MatrixXd Tfk = FKinBody(thetalist);
     Eigen::MatrixXd Tdiff = Algebra::TransInv(Tfk)*T;
     Eigen::VectorXd Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
@@ -121,6 +135,7 @@ private:
     
     bool err = (angular.norm() > eomg || linear.norm() > ev);
     Eigen::MatrixXd Jb;
+    double omg_norm, v_norm;
     while (err && i < maxiterations) {
       Jb = JacobianBody(thetalist);
       thetalist += Jb.bdcSvd(Eigen::ComputeThinU |
@@ -132,21 +147,32 @@ private:
       Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
       angular = Eigen::Vector3d(Vb(0), Vb(1), Vb(2));
       linear = Eigen::Vector3d(Vb(3), Vb(4), Vb(5));
-      err = (angular.norm() > eomg || linear.norm() > ev);
+      omg_norm=angular.norm();
+      v_norm=linear.norm();
+      err = (omg_norm > eomg || v_norm > ev);
+      if (log) {
+        write("iteration(space)", i);
+        write("transformation(space)", Tfk);
+        write("twist(space)", Vb);
+        write("angular norm(space)", angular.norm());
+        write("linear norm(space)", linear.norm());
+        write("thetalist(space)", thetalist);
+      }
     }
-    return !err;
+    // err boolean True if the iteration is ended without reaching the allowable limits determined by eomg, and ev.
+    //assert(!err);
+    return thetalist;
   }
 
   /** Inverse Kinematics in Space frame, given the mechanism configurations, IKinSpace derives the joints angles.
    *
-   * @param T output Transfomation matrix representing the end-effector frame when the joints are at the specified coordinates
-   * @return err boolean True if the iteration is ended without reaching the allowable limits determined by eomg, and ev.
+   * @param thetalist initial angles configurations.
+   * @param T Transfomation matrix representing the end-effector frame when the joints are at the specified coordinates.
+   * @return thetalist angles configurations.
    */
-  inline bool IKinSpace(const Eigen::MatrixXd& T,
-                        Eigen::VectorXd& thetalist) const {
+  inline Eigen::VectorXd
+  IKinSpace(Eigen::MatrixXd T, Eigen::VectorXd thetalist) {
     int i = 0;
-    //TODO add this to a config file
-    int maxiterations = 20;
     Eigen::MatrixXd Tfk = FKinSpace(thetalist);
     Eigen::MatrixXd Tdiff = Algebra::TransInv(Tfk)*T;
     Eigen::VectorXd Vs = Algebra::Adjoint(Tfk)*Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
@@ -155,6 +181,7 @@ private:
     
     bool err = (angular.norm() > eomg || linear.norm() > ev);
     Eigen::MatrixXd Js;
+    double omg_norm,v_norm;
     while (err && i < maxiterations) {
       Js = JacobianSpace(thetalist);
       thetalist += Js.bdcSvd(Eigen::ComputeThinU |
@@ -166,9 +193,21 @@ private:
       Vs = Algebra::Adjoint(Tfk)*Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
       angular = Eigen::Vector3d(Vs(0), Vs(1), Vs(2));
       linear = Eigen::Vector3d(Vs(3), Vs(4), Vs(5));
-      err = (angular.norm() > eomg || linear.norm() > ev);
+      omg_norm=angular.norm();
+      v_norm=linear.norm();
+      err = (omg_norm > eomg || v_norm > ev);
+      if (log) {
+        write("iteration(body)", i);
+        write("transformation(body)", Tfk);
+        write("twist(body)", Vs);
+        write("angular norm(body)", angular.norm());
+        write("linear norm(body)", linear.norm());
+        write("thetalist(body)", thetalist);
+      }
     }
-    return !err;
+    //err boolean True if the iteration is ended without reaching the allowable limits determined by eomg, and ev.
+    //assert(!err);
+    return thetalist;
   }
 
   /** Gives the Jacobian in space frame
