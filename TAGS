@@ -1,0 +1,84 @@
+
+src/kinematics.cpp,120
+Kinematics::ForwardKin(ForwardKin4,54
+Kinematics::InverseKin(InverseKin14,250
+Kinematics::Jacobian(Jacobian24,493
+
+src/kinetics.cpp,200
+Kinetics::InverseDynamics(InverseDynamics8,232
+Kinetics::ForwardDynamics(ForwardDynamics56,1841
+inline void Kinetics::EulerStep(EulerStep75,2490
+Kinetics::ComputedTorque(ComputedTorque82,2630
+
+src/mission.cpp,138
+Mission::InverseDynamicsTrajectory(InverseDynamicsTrajectory6,143
+Mission::ForwardDynamicsTrajectory(ForwardDynamicsTrajectory44,1797
+
+src/trajectory.cpp,163
+Trajectory::JointTrajectory(JointTrajectory5,78
+Trajectory::ScrewTrajectory(ScrewTrajectory22,577
+Trajectory::CartesianTrajectory(CartesianTrajectory38,1071
+
+include/kinematics.hpp,390
+class Kinematics 9,297
+  bool space_frame;14,442
+  double eomg;20,780
+  double ev;21,795
+  Eigen::MatrixXd M;22,808
+  int maxiterations;23,829
+  bool log;24,850
+  Eigen::MatrixXd Slist;29,953
+  Eigen::MatrixXd Blist;30,978
+  Kinematics(31,1003
+  FKinSpace(99,3342
+  FKinBody(113,3876
+  IKinBody(128,4485
+  IKinSpace(175,6409
+  JacobianSpace(220,8092
+  JacobianBody(239,8753
+
+include/kinetics.hpp,746
+class Kinetics 4,66
+  Eigen::VectorXd thetalist;7,104
+  Eigen::VectorXd dthetalist;9,146
+  Eigen::VectorXd ddthetalist;11,193
+  Kinetics(48,1693
+  Eigen::VectorXd get_pos(69,2415
+  Eigen::VectorXd get_vel(73,2480
+  Eigen::VectorXd get_accl(77,2546
+  inline Eigen::VectorXd GravityForces(168,5935
+  inline Eigen::MatrixXd MassMatrix(195,7206
+  inline Eigen::VectorXd VelQuadraticForces(230,8702
+  EndEffectorForces(263,10234
+  const std::vector<Eigen::MatrixXd> Mlist;278,10856
+  const std::vector<Eigen::MatrixXd> Glist;279,10900
+  const Eigen::MatrixXd Slist;280,10944
+  const Eigen::VectorXd g;281,10975
+  const double Kp,283,11032
+  const double Kp, Ki,283,11032
+  const double Kp, Ki, Kd;283,11032
+  const int N;285,11081
+
+include/logger.hpp,175
+class Logger 8,136
+  Logger(10,161
+  void write(22,579
+  void write(45,1123
+  void write(65,1550
+  void write(75,1763
+  void close(80,1872
+  std::fstream buff;85,1923
+
+include/mission.hpp,43
+class Mission{Mission1,0
+  Mission(2,15
+
+include/trajectory.hpp,184
+class Trajectory 4,42
+  double Tf;6,69
+  int N;7,82
+  int method;8,91
+  double dt;9,105
+  Trajectory(10,118
+  double CubicTimeScaling(27,616
+  double QuinticTimeScaling(33,770

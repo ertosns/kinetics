@@ -7,6 +7,7 @@
 
 # define M_PI           3.14159265358979323846 
 
+/*
 using namespace testing;
 
 class FxTraj : public testing::Test {
@@ -106,6 +107,7 @@ TEST_F(FxTraj, QuinticTimeScalingTest) {
 }
 */
 
+/*
 TEST_F(FxTraj, JointTrajectoryTest) {
   int dof = 8;
   Eigen::VectorXd thetastart(dof);
@@ -537,5 +539,7 @@ TEST_F(FxTraj, SimulateControlTest) {
 
 	ASSERT_TRUE(traj_tau_timestep.isApprox(result_taumat, 4));
 	ASSERT_TRUE(traj_theta_timestep.isApprox(result_thetamat, 4));
+        
 }
 
+*/

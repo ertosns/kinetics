@@ -3,6 +3,7 @@
 #include "algebra.hpp"
 #include <cassert>
 #include "logger.hpp"
+
 //TODO add eomg, ev to auto generated configuration file
 //TODO add checks on the length of given matrices, and vectors for example length of thetalist must match cols of the Slist, Blist.
 class Kinematics : public Logger{
@@ -74,7 +75,7 @@ public:
   /** Compute joints thetas given the end-effector configuration
    *
    * @param T is the target configuration
-   * @param thetalist: the the desired  joint angles to calculate
+   * @param thetalist: the initial thetalist, and output the target joint angles.
    * @return boolean success flag
    */
   Eigen::VectorXd InverseKin(const Eigen::MatrixXd& T,
