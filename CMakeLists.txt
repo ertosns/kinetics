@@ -4,6 +4,9 @@ set(project_name kinetics)
 
 project(${project_name})
 
+# debuging mode
+#set(CMAKE_BUILD_TYPE Debug)
+
 #TODO  download algebra from github.com/ertosns/algebra if it isn't present.
 add_subdirectory(algebra)
 
@@ -29,6 +32,10 @@ add_library(${project_name} STATIC
   ./src/kinetics.cpp
   ./src/kinematics.cpp
   ./src/trajectory.cpp
+  ./include/kinetics.hpp
+  ./include/kinematics.hpp
+  ./include/trajectory.hpp
+  ./include/mission_planning.hpp
   )
 
 ################
@@ -37,12 +44,14 @@ add_library(${project_name} STATIC
 add_executable(${test_name} ./tests/kinematics_test.cpp
   ./tests/kinetics_test.cpp
   ./tests/trajectory_test.cpp
+  ./tests/mission_planning_test.cpp
   ./src/kinematics.cpp
   ./src/kinetics.cpp
   ./src/trajectory.cpp
   ./include/kinematics.hpp
   ./include/kinetics.hpp
   ./include/trajectory.hpp
+  ./include/mission_planning.hpp
   )
 target_link_libraries(${test_name} gtest pthread)
 
