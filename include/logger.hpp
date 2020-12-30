@@ -56,7 +56,8 @@ public:
         buff << vec(i) << std::string(",");
     }
   }
-  
+
+ 
   /** write integer to the logging file
    *
    * @param tag tag name
@@ -65,6 +66,20 @@ public:
   void write(std::string tag, const int i) {
     buff << tag << std::endl <<
       i << std::endl;
+  }
+
+  void write(const int i, bool end=false) {
+    if (end) 
+      buff << i <<  std::endl;
+    else
+      buff << i << ",";
+  }
+
+  void write(const double i, bool end=false) {
+    if (end)
+      buff << i << std::endl;
+    else
+      buff << i << ",";
   }
   
   /** write double to the logging file

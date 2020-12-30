@@ -3,8 +3,8 @@
 #include <vector>
 #include "gmock/gmock.h"
 //#include "gtest/gtest.h"
-#include "../include/mission_planning.hpp"
-
+#include "../include/astar.hpp"
+#include "../include/logger.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -205,19 +205,35 @@ public:
     f.close();
     return;
   }
-  std::unique_ptr<Graph> construct_graph() {
+  std::unique_ptr<AsGraph> construct_graph() {
     read_nodes();
     read_edges();
     std::cout << "finished reading!" << std::endl;
     //TODO why does using *nodes.begin(), *nodes.end() fails?!
-    auto g=std::unique_ptr<Graph>(new Graph(nodes[0], nodes[nodes.size()-1]));
+    auto g=std::unique_ptr<AsGraph>(new AsGraph(nodes[0], nodes[nodes.size()-1], nodes));
     return g;
   }
 };
 
-TEST(MISSIONING, Graph) {
+TEST(MISSIONING, GraphPath) {
   //TODO (fix) move readgraph readnodes, readedges to here!
   ReadGraph_CSV rg;
-  std::unique_ptr<Graph> g = rg.construct_graph();
-  
+  std::unique_ptr<AsGraph> g = rg.construct_graph();
+  std::vector<int> truth_table= {1,3,4,7,10,12};
+  //first search
+  g->Astar();
+  //secondly get the path
+  auto path = g->get_path();
+  Logger log = Logger("path.csv");
+  int c=0;
+  int size=path.size();
+  for (auto p : path) {
+    auto id=p->id;
+    ASSERT_THAT(truth_table[c++], Eq(id));
+    if (c==size-1)
+      log.write(id, true);
+    else
+      log.write(id, false);
+  }
+  log.close();
 }
