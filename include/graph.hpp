@@ -39,21 +39,30 @@ public:
    *
    *@param n output Node
    */
-  void operator+(std::shared_ptr<Edge> n) {
-    // this keep the parent node
-    edges.push_back(n);
-    //edges.sort(edges.begin(), edges.end(), lambda edge : edge.node.total_cost());
+  void add_edge(Edge* e) {
+    edges.push_back(e);
+  }
+  
+  void operator+(Edge* e) {
+    edges.push_back(e);
   }
 
   //TODO why this discards qualifiers?! (dereferencing)
-  //bool operator==(std::shared_ptr<Node> n) const 
-  bool operator==(std::shared_ptr<Node> n) {
+  //bool operator==(std::unique_ptr<Node> n) const
+  /*
+  bool operator==(std::unique_ptr<Node> n) {
     return p==n->p;
   }
+  */
 
-  bool operator==(Node& n) {
+  bool operator==(Node n) {
     return p==n.p;
   }
+
+  bool operator==(Node* n) {
+    return p==n->p;
+  }
+  
   int get_id() const {
     return id;
   }
@@ -86,14 +95,23 @@ public:
     open_=false;
   }
   
-  void set_parent(std::shared_ptr<Node> n) {
-    //TODO (res) i think i should use reset!
-    //parent=n;
-    parent.reset(n.get());
+  void set_parent(Node* n) {
+    parent=n;
+  }
+
+  
+  Node* get_parent() {
+    return parent;
   }
   
-  std::shared_ptr<Node> get_parent() {
-    return parent;
+
+  bool has_parent() {
+    return parent!=nullptr;
+  }
+
+  int get_parent_id() {
+    if (has_parent())
+      return parent->id;
   }
   
   /** get node state open/close
@@ -104,17 +122,25 @@ public:
   bool open() const {
     return open_;
   }
-  
-  std::list<std::shared_ptr<Edge>> get_edges() {
+
+  /*
+  std::vector<Edge*>& get_edges() {
     return edges;
+  }
+  */
+
+  void apply_edge(std::function<void(Edge*)> act) {
+    for (auto it=edges.begin(); it!=edges.end(); it++) {
+      act(*it);
+    }
   }
   
   friend std::ostream& operator<<(std::ostream&, Node&);
   
   //private:
 protected:
-  std::list<std::shared_ptr<Edge>> edges;
-  std::shared_ptr<Node> parent;
+  std::vector<Edge*> edges;
+  Node* parent;
   bool open_;
   double cost_;
 };
@@ -127,19 +153,20 @@ std::ostream& operator<<(std::ostream& os, Node& n) {
 
 class Edge {
 public:
-  std::shared_ptr<Node> node;
   //TODO (res) is it required to keep track of the current id, and next id (n.id)?
-  Edge(std::shared_ptr<Node> &n, double weight) : weight_(weight) {
+  Edge(Node* n, double weight) : weight_(weight) {
     node=n;
   }
   double weight() {
     return weight_;
   }
-  std::shared_ptr<Node> get_node() {
+  Node* get_node() {
     return node;
   }
   friend std::ostream& operator<<(std::ostream&, Edge&);
-private:  
+
+private:
+  Node* node;
   const double weight_;
 };
 
@@ -160,19 +187,19 @@ std::ostream& operator<<(std::ostream& os, Edge& e) {
 class Graph {
 public:
 
-  Graph(std::shared_ptr<Node> st,
-        std::shared_ptr<Node> ed) {
+  Graph(Node* st,
+        Node* ed) {
     //TODO why does constant initialization st_(st), ed_(ed) fails?
     st_ = st;
     ed_ = ed;
     std::cout << "graph (" << *st << ") -> (" << *ed << ") instantiated" << std::endl;
   }
 
-  std::shared_ptr<Node> get_start() {
+  Node* get_start() {
     return st_;
   }
 
-  std::shared_ptr<Node> get_end() {
+  Node* get_end() {
     return ed_;
   }
   /** get path starting from ed backward to st, should be called after the searching algorithm.
@@ -180,25 +207,25 @@ public:
    *
    *@return path list<Node> of nodes.
    */
-  std::list<std::shared_ptr<Node>> get_path() {
-    std::list<std::shared_ptr<Node>> path;
+  std::list<Node*> get_path() {
+    std::list<Node*> path;
     //sort the graph from st_(start) to ed_(end)
     //TODO (fix) consider if there is no path.
     //TODO (fix) if the graph isn't searched, then return an error, or better, you should initlize the parents randomly, or set the parent to any edge, and consider if there is no path ot the end.
-    std::shared_ptr<Node> current=get_end();
+    Node* current=get_end();
     path.push_back(current);
     //TODO (fix) the path from the ed backward to the st,
     // and it's dereference the parent of each node rather than,
     // the smallest neighbouring (in undirected graph) total cost.
     while (!(*current==*get_start())) {
       std::cout << "PATH: getting parent of : " << *current  << std::endl;
-      // TODO get segmentation error from this line, i don't understand why?! and i'm sure it was set with a parent, but this means it doesn't actually, so this current doesn't have parent, but other reference does!!, but how this is possible in case of shared_ptr?!
-      std::shared_ptr<Node> parent = current->get_parent();
+      // TODO get segmentation error from this line, i don't understand why?! and i'm sure it was set with a parent, but this means it doesn't actually, so this current doesn't have parent, but other reference does!!, but how this is possible in case of unique_ptr?!
+      Node* parent = current->get_parent();
       path.push_back(parent);
       //TODO (res) a difference?
       //current=parent;
       std::cout << "to be current: " << parent << std::endl;
-      current.reset(parent.get());
+      current=parent;
       std::cout << "current: " << current << std::endl;
     }
     return path;
@@ -206,15 +233,16 @@ public:
   //TODO (fix) no longer valid, read cost from corresponding parent
   //TODO change name to get_cost
   //after searching
+  /*
   double cost() {
     //sort the graph from st_(start) to ed_(end)
     std::cout << "searching the path start " << *st_ << " to node " << *ed_ << std::endl;
     double cost;
-    std::shared_ptr<Node> current=st_;
+    Node* current=st_;
     //path.push_back(current);
     while (!(*current==*ed_)) {
       auto current_optimal_edge=(*current->get_edges().begin());
-      std::shared_ptr<Node> shortest = current_optimal_edge->node;
+      Node* shortest = current_optimal_edge->get_node();
       cost +=current_optimal_edge->weight();
       std::cout << "passes through : " << *shortest << std::endl;
       //path.push_back(shortest);
@@ -222,20 +250,20 @@ public:
     }
     return cost;
   }
-  
+  */
   friend std::ostream& operator<<(std::ostream&, Graph&);
   
 private:
-  //TODO can the shared_ptr be const?
-  std::shared_ptr<Node> st_; /*entry*/
-  std::shared_ptr<Node> ed_; /*target*/
+  //TODO can the unique_ptr be const?
+  Node* st_; /*entry*/
+  Node* ed_; /*target*/
  
 };
 
 std::ostream& operator<<(std::ostream &os, Graph &g) {
   int i=0;
   
-  for (std::shared_ptr<Node> n : g.get_path()) {
+  for (Node* n : g.get_path()) {
     os << " -> " <<  *n << i++;
   }
   
