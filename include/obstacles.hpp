@@ -1,3 +1,4 @@
+#define OBSTACLES
 #include <vector>
 #include <Eigen/Dense>
 //#include <QDebug>
@@ -13,13 +14,14 @@ public:
    *@param p given point
    *@return distance
    */
-  double operator-(Point &p) {
-    return sqrt((p.p_.array() - p_.array()).square().sum());
+  double operator-(Point p) {
+    return sqrt((p.vector().array() - vector().array()).square().sum());
   }
-
+  /*
   double operator-(Point *p) {
-    return sqrt((p->p_.array() - p_.array()).square().sum());
+    return sqrt((p->vector().array() - vector().array()).square().sum());
   }
+  */
   /** verify that p is the same as the current point
    *
    *@param p given point
@@ -28,11 +30,21 @@ public:
   bool operator==(Point &p) {
     return *this-p==0;
   }
+
+  Eigen::VectorXd vector() {
+    return p_;
+  }
+  
   friend std::ostream& operator<<(std::ostream&, const Point&);
 private:
   const Eigen::VectorXd p_;
 };
 
+std::ostream& operator<<(std::ostream& os, Point& p) {
+  auto vec = p.vector();
+  os << "(" << vec(0) << "," << vec(1) << ")";
+  return os;
+}
 
 class Obstacle
 {
@@ -44,21 +56,52 @@ public:
    * @param first point (outside the obstacle
    * @param second point (uncertain)
    */
-  virtual bool intersect(Point &p1, Point &p2);
+  //TODO (the same problem virtual fails to compile!
+  //virtual bool intersect(Point &p1, Point &p2);
 };
 
 class CircleObs : public Obstacle {
 public:
   /** Construct a circular obstacle with:
-   *
+   * using the 
    * @param c coordinates of the center
    * @param r radius of the circle
    */
-  CircleObs(Point c, double r): center(c), radius(r){
+  CircleObs(Point c, double r): Obstacle(), center(c), radius(r) {
+    
   }
-  bool intersect(Point &p1, Point &p2) {
-    return false;
+
+  /** calculate the distance of the perpendicular to the center.
+   * for line equation Ax + By + C = 0
+   * and circle of point (m, n)
+   * d = |Am + Bn + c| / sqrt(A^2 + B^2)
+   * equation of line with slop s = y-y1/(x-x1)
+   * line P2-P1 equation = y - sx - y1 + sx1=0
+   * B = 1, A = -s, C = -y1 + sx1
+   */
+  bool intersect(Point p1, Point p2, double robot_radius=0) {
+    
+    Eigen::VectorXd p1_vec = p1.vector();
+    double x1=p1_vec(0);
+    double y1=p1_vec(1);
+    Eigen::VectorXd p2_vec = p2.vector();
+    double x2=p2_vec(0);
+    double y2=p2_vec(1);
+    double s = (y2 - y1)/(x2 - x1);
+    double A = -1*s;
+    double B = 1;
+    double C = -1*y1 + s*x1;
+    Eigen::VectorXd c_vec = center.vector();
+    double m = c_vec(0);
+    double n = c_vec(1);
+    double distance = std::abs(-1*s*m + n - y1 + s*x1) /
+      std::sqrt(1+std::pow(s,2));
+    bool inter = distance <= radius+robot_radius;
+    if(inter)
+      std::cout << "*** the distance between line P1P2 and center::" << center << " is: "  << distance << std::endl;
+    return inter;
   }
+  
 private:
   Point center;
   double radius;
@@ -124,4 +167,5 @@ private:
   Point br;
 };
 
-typedef std::vector<std::unique_ptr<Obstacle>> Obstacles;
+//TODO after fixing the issue with virtual function, update this to template Obstacle instead
+typedef std::vector<CircleObs*> Obstacles;

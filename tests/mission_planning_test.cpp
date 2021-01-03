@@ -3,8 +3,6 @@
 #include <vector>
 #include "gmock/gmock.h"
 //#include "gtest/gtest.h"
-#include "../include/astar.hpp"
-#include "../include/logger.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -12,10 +10,19 @@
 #include <list>
 #include <vector>
 #include <cmath>
+#ifndef GRAPH_HDR
+#include "../include/graph.hpp"
+#endif
+#include "../include/astar.hpp"
+#include "../include/logger.hpp"
+#ifndef OBSTACLES
+#include "../include/obstacles.hpp"
+#endif
+#include "../include/rrt.hpp"
 
 using namespace testing;
 
-/*
+
 TEST(MISSIONING, PointZero) {
   Eigen::VectorXd v1(2);
   v1 << 0,0;
@@ -50,10 +57,10 @@ TEST(MISSIONING, NodeEdges) {
 //    weighted by 0.3, 
   //  where n1(ctg)=3, n2(ctg)=4.
   
-  auto n1 = std::unique_ptr<Node>(new Node(p1, 3, 1));
-  auto n2 = std::unique_ptr<Node>(new Node(p2, 4, 2));
-  auto e1 = std::unique_ptr<Edge>(new Edge(n2, 0.3));
-  auto e2 = std::unique_ptr<Edge>(new Edge(n1, 0.3));
+  auto n1 = new Node(p1, 3, 1);
+  auto n2 = new Node(p2, 4, 2);
+  auto e1 = new Edge(n2, 0.3);
+  auto e2 = new Edge(n1, 0.3);
   (*n1)+e1;
   (*n2)+e2;
   //verify the node's edges sizes
@@ -68,6 +75,7 @@ TEST(MISSIONING, NodeEdges) {
   //
 }
 
+
 TEST(MISSIONING, GraphCost) {
   Eigen::VectorXd v1(3);
   v1 << 1,2,3;
@@ -75,36 +83,42 @@ TEST(MISSIONING, GraphCost) {
   v2 << 1,3,3;
   Point p1(v1);
   Point p2(v2);
- 
- //   construct a graph (n1) <--0.3--> (n2) ,
- //   weighted by 0.3, 
-  //  where n1(ctg)=3, n2(ctg)=4.
   
-  auto n1 = std::unique_ptr<Node>(new Node(p1, 3, 1));
+  // construct a graph (n1) <--0.3--> (n2) ,
+  // weighted by 0.3, 
+  // where n1(ctg)=3, n2(ctg)=4.
+  
+  auto n1 = new Node(p1, 3, 1);
   n1->set_cost(0);
-  auto n2 = std::unique_ptr<Node>(new Node(p2, 4, 2));
+  auto n2 = new Node(p2, 4, 2);
   n2->set_cost(INFINITY);
   //
-  auto e1 = std::unique_ptr<Edge>(new Edge(n2, 0.3));
-  auto e2 = std::unique_ptr<Edge>(new Edge(n1, 0.3));
+  auto e1 = new Edge(n2, 0.3);
+  auto e2 = new Edge(n1, 0.3);
   //
   (*n1)+e1;
   (*n2)+e2;
-  Graph g = Graph(n1, n2);
-  // test the graph
-  double cost = g.cost();
+  std::vector<Node*> nodes;
+  nodes.push_back(n1);
+  nodes.push_back(n2);
+  AsGraph *g = new AsGraph(nodes);
+  g->search();
+  double cost = g->cost();
   ASSERT_THAT(cost, Eq(0.3));
 }
 
-*/
+
 
 class ReadGraph_CSV {
 public:
   std::string edges_path;
   std::string nodes_path;
+  std::string obs_path;
   std::vector<Node*> nodes;
+  Obstacles obstacles;
   ReadGraph_CSV() : edges_path("/opt/Scene5_example/edges.csv"),
-                    nodes_path("/opt/Scene5_example/nodes.csv") {
+                    nodes_path("/opt/Scene5_example/nodes.csv"),
+                    obs_path("/opt/Scene5_example/obstacles.csv"){
     /*
       std::cout << "enter edges_path: ";
       std::cin >> edges_path;
@@ -208,26 +222,71 @@ public:
     f.close();
     return;
   }
-  std::unique_ptr<AsGraph> construct_graph() {
+  void read_obstacles() {
+    std::ifstream f;
+    f.open(obs_path);
+    if (!f) {
+      std::cerr <<  "filed to read: " << obs_path;
+      return;
+    }
+    std::stringstream buff;
+    buff << f.rdbuf();
+    double x,y,radius;
+    Eigen::VectorXd pt(2);
+    int c;
+    char s[1024];
+    while (buff) {
+      if ((c=buff.get())=='#') {
+        buff.getline(s, 1024);
+        continue;
+      } else {
+        buff.putback(c);
+      }
+      buff >> x; buff.ignore(); // ','
+      buff >> y; buff.ignore(); // ','
+      buff >> radius; buff.ignore(); // '\n'
+      pt << x, y;
+      auto obs = new CircleObs(pt, radius);
+      obstacles.push_back(obs);
+    }
+    f.close();
+  }
+  AsGraph* construct_graph() {
     read_nodes();
     read_edges();
     //std::cout << "finished reading!" << std::endl;
     //TODO why does using *nodes.begin(), *nodes.end() fails?!
     std::cout << "start node: " << *nodes[0] <<
       "end node: " << *nodes[nodes.size()-1] << std::endl;
-    auto g=std::unique_ptr<AsGraph>(new AsGraph(nodes[0], nodes[nodes.size()-1], nodes));
+    AsGraph *g = new AsGraph(nodes);
     return g;
+  }
+  RRT* construct_rrt() {
+    // read obs
+    read_obstacles();
+    // read begin/end
+    Eigen::VectorXd beg_vec(2);
+    beg_vec << -0.5, -0.5;
+    Eigen::VectorXd end_vec(2);
+    end_vec << 0.5, 0.5;
+    Node *begin = new Node(beg_vec);
+    Node *end = new Node(end_vec);
+    nodes.push_back(begin);
+    nodes.push_back(end);
+    auto rrt = new RRT(nodes, obstacles, 1, 1);
+    return rrt;
   }
 };
 
 TEST(MISSIONING, GraphPath) {
   //TODO (fix) move readgraph readnodes, readedges to here!
   ReadGraph_CSV rg;
-  std::unique_ptr<AsGraph> g = rg.construct_graph();
+  AsGraph *g = rg.construct_graph();
+  //
   std::vector<int> truth_table= {1,3,4,7,10,12};
-  //first search
-  g->Astar();
   //secondly get the path
+  g->search();
+  std::cout << "||*_*|| graph searched! ||*_*||" << std::endl;
   auto path = g->get_path();
   Logger log = Logger("path.csv");
   int c=0;
@@ -242,4 +301,30 @@ TEST(MISSIONING, GraphPath) {
       log.write(id, false);
   }
   log.close();
+}
+
+TEST(RRT, ObstacleIntersect) {
+  Eigen::VectorXd center_vec(2);
+  center_vec << 2,2;
+  Point center(center_vec);
+  double radius=1.5;
+  auto C = CircleObs(center, radius);
+  //
+  Eigen::VectorXd p1_vec(2);
+  p1_vec << 0,3;
+  Point p1(p1_vec);
+  //
+  Eigen::VectorXd p2_vec(2);
+  p2_vec << 3,3;
+  Point p2(p2_vec);
+  //
+  //Tangent line is considered to be intersecting.
+  ASSERT_TRUE(C.intersect(p1, p2));
+}
+
+
+TEST(RRT, RRTSearch) {
+  ReadGraph_CSV rg;
+  RRT *rrt = rg.construct_rrt();
+  rrt->search();
 }

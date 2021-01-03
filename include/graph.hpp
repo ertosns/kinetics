@@ -1,3 +1,4 @@
+#define GRAPH_HDR
 #include <vector>
 #include <cmath>
 #include <Eigen/Dense>
@@ -5,7 +6,9 @@
 #include <vector>
 #include <memory>
 #include <exception>
+#ifndef OBSTACLES
 #include "obstacles.hpp"
+#endif
 
 class Edge;
 
@@ -16,7 +19,8 @@ public:
   //used in A* search graph
   const double CTG; 
   Point p;
-  int id; //node name/id
+  int id;
+  //node name/id
   /** Graph node class
    *
    * past cost: is the shortest cost so far.
@@ -28,11 +32,16 @@ public:
    * @param _open state of the node, it's always opend initially.
    * 
    */
-  Node(Point _p, double heuristic_ctg, int _id=-1, bool _open=true) : CTG(heuristic_ctg), p(_p), id(_id) {
-    //TODO why i can't do that!!
-    //p=_p; i get error there is not Point::Point() !!
-    open_=_open;
-    cost_=INFINITY;
+  Node(Point _p, double heuristic_ctg=INFINITY,
+       int _id=-1, bool _open=true) :
+    CTG(heuristic_ctg), p(_p), id(_id), open_(_open),
+    cost_(INFINITY) {
+  }
+  
+  Node(Eigen::VectorXd v) : Node(Point(v)) {}
+
+  Point get_point() {
+    return p;
   }
 
   /** add new edge
@@ -42,9 +51,22 @@ public:
   void add_edge(Edge* e) {
     edges.push_back(e);
   }
-  
+  //
   void operator+(Edge* e) {
     edges.push_back(e);
+  }
+
+  /** calculate the distance between this node, and the given n
+   *
+   * distance is evaluated = this_point - n_point
+   *@param n is pointer to Node
+   
+   */
+  double operator-(Node* n) {
+    return get_point() - n->get_point();
+  }
+  double operator-(Node n) {
+    return get_point() - n.get_point();
   }
 
   //TODO why this discards qualifiers?! (dereferencing)
@@ -110,8 +132,12 @@ public:
   }
 
   int get_parent_id() {
+    int id=-1;
     if (has_parent())
-      return parent->id;
+      id=parent->id;
+    else
+      std::cerr << "Node: " << *this << " doesn't have parent!" << std::endl;
+    return id;
   }
   
   /** get node state open/close
@@ -123,11 +149,11 @@ public:
     return open_;
   }
 
-  /*
+  
   std::vector<Edge*>& get_edges() {
     return edges;
   }
-  */
+  
 
   void apply_edge(std::function<void(Edge*)> act) {
     for (auto it=edges.begin(); it!=edges.end(); it++) {
@@ -154,7 +180,7 @@ std::ostream& operator<<(std::ostream& os, Node& n) {
 class Edge {
 public:
   //TODO (res) is it required to keep track of the current id, and next id (n.id)?
-  Edge(Node* n, double weight) : weight_(weight) {
+  Edge(Node* n, double weight=INFINITY) : weight_(weight) {
     node=n;
   }
   double weight() {
@@ -188,10 +214,7 @@ class Graph {
 public:
 
   Graph(Node* st,
-        Node* ed) {
-    //TODO why does constant initialization st_(st), ed_(ed) fails?
-    st_ = st;
-    ed_ = ed;
+        Node* ed) : st_(st), ed_(ed){
     std::cout << "graph (" << *st << ") -> (" << *ed << ") instantiated" << std::endl;
   }
 
@@ -199,19 +222,32 @@ public:
     return st_;
   }
 
+  void set_end(Node *n) {
+    ed_=n;
+  }
+  
   Node* get_end() {
     return ed_;
   }
+
+  //virtual void search()=0;
+  
   /** get path starting from ed backward to st, should be called after the searching algorithm.
    * first sort the graph from st_(start) to ed_(end)
    *
    *@return path list<Node> of nodes.
    */
-  std::list<Node*> get_path() {
-    std::list<Node*> path;
+
+  //TODO (why virtual definition of search result in segfault upon call from the test case, notice that in this case you call seach for the graph's get_path, cost function.
+  
+  
+  std::vector<Node*> get_path() {
+    std::cout << "get_path!" << std::endl;
+    std::vector<Node*> path;
     //sort the graph from st_(start) to ed_(end)
     //TODO (fix) consider if there is no path.
     //TODO (fix) if the graph isn't searched, then return an error, or better, you should initlize the parents randomly, or set the parent to any edge, and consider if there is no path ot the end.
+    //Node* current=path_e;
     Node* current=get_end();
     path.push_back(current);
     //TODO (fix) the path from the ed backward to the st,
@@ -230,27 +266,21 @@ public:
     }
     return path;
   }
+  
   //TODO (fix) no longer valid, read cost from corresponding parent
   //TODO change name to get_cost
-  //after searching
-  /*
   double cost() {
-    //sort the graph from st_(start) to ed_(end)
-    std::cout << "searching the path start " << *st_ << " to node " << *ed_ << std::endl;
     double cost;
-    Node* current=st_;
-    //path.push_back(current);
-    while (!(*current==*ed_)) {
+    Node* current=get_end();
+    while (!(*current==*get_start())) {
       auto current_optimal_edge=(*current->get_edges().begin());
-      Node* shortest = current_optimal_edge->get_node();
+      Node* shortest = current->get_parent();
       cost +=current_optimal_edge->weight();
-      std::cout << "passes through : " << *shortest << std::endl;
-      //path.push_back(shortest);
       current=shortest;
     }
     return cost;
   }
-  */
+
   friend std::ostream& operator<<(std::ostream&, Graph&);
   
 private:
@@ -260,6 +290,7 @@ private:
  
 };
 
+/*
 std::ostream& operator<<(std::ostream &os, Graph &g) {
   int i=0;
   
@@ -269,3 +300,4 @@ std::ostream& operator<<(std::ostream &os, Graph &g) {
   
   return os;
 }
+*/
