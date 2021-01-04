@@ -45,6 +45,18 @@ TEST(MISSIONING, PointDistance) {
   ASSERT_FALSE(p1==p2);
 }
 
+TEST(MISSIONING, PointDistance2) {
+  //try negative coordinates
+  Eigen::VectorXd v1(2);
+  v1 << -1,-1;
+  Eigen::VectorXd v2(2);
+  v2 << 1,1;
+  Point p1(v1);
+  Point p2(v2);
+  ASSERT_THAT(p1-p2, Eq(2*std::sqrt(2)));
+  ASSERT_FALSE(p1==p2);
+}
+
 TEST(MISSIONING, NodeEdges) {
   Eigen::VectorXd v1(3);
   v1 << 1,2,3;
@@ -118,7 +130,7 @@ public:
   Obstacles obstacles;
   ReadGraph_CSV() : edges_path("/opt/Scene5_example/edges.csv"),
                     nodes_path("/opt/Scene5_example/nodes.csv"),
-                    obs_path("/opt/Scene5_example/obstacles.csv"){
+                    obs_path("/opt/planning_coursera/obstacles.csv"){
     /*
       std::cout << "enter edges_path: ";
       std::cin >> edges_path;
@@ -246,7 +258,7 @@ public:
       buff >> y; buff.ignore(); // ','
       buff >> radius; buff.ignore(); // '\n'
       pt << x, y;
-      auto obs = new CircleObs(pt, radius);
+      auto obs = new CircleObs(pt, radius/2.0);
       obstacles.push_back(obs);
     }
     f.close();
@@ -269,11 +281,11 @@ public:
     beg_vec << -0.5, -0.5;
     Eigen::VectorXd end_vec(2);
     end_vec << 0.5, 0.5;
-    Node *begin = new Node(beg_vec);
+    Node *begin = new Node(beg_vec, INFINITY, 1);
     Node *end = new Node(end_vec);
-    nodes.push_back(begin);
-    nodes.push_back(end);
-    auto rrt = new RRT(nodes, obstacles, 1, 1);
+    //nodes.push_back(begin);
+    //nodes.push_back(end);
+    auto rrt = new RRT(begin, end, obstacles, 1, 1);
     return rrt;
   }
 };
@@ -324,7 +336,49 @@ TEST(RRT, ObstacleIntersect) {
 
 
 TEST(RRT, RRTSearch) {
+  auto pathlog = Logger("path.csv");
+  auto nodelog = Logger("nodes.csv");
+  auto edgelog = Logger("edges.csv");
+  std::vector<double> path_vec;
   ReadGraph_CSV rg;
   RRT *rrt = rg.construct_rrt();
   rrt->search();
+  //
+  //add nodes
+  //
+  std::vector<Node*> nodes=rrt->get_nodes();
+  for (int i = 0; i < nodes.size(); i++) {
+    std::vector<double> nodeline;
+    
+    Node *cur=nodes[i];
+    Eigen::VectorXd p_vec=cur->get_point().vector();
+    //TODO update ctg to the Euclidean distance to goal
+    nodeline.push_back(cur->get_id());
+    nodeline.push_back(p_vec(0));
+    nodeline.push_back(p_vec(1));
+    nodeline.push_back(0); //heuristic cost to go
+    nodelog.csv_line(nodeline);
+    //
+    //add edges
+    //
+    for (auto e: nodes[i]->get_edges()) {
+      std::vector<double> edgeline;
+      edgeline.push_back(cur->get_id());
+      edgeline.push_back(e->get_node()->get_id());
+      edgeline.push_back(0); // weight
+      edgelog.csv_line(edgeline);
+    }
+  }
+  nodelog.close();
+  edgelog.close();
+  //
+  //add path
+  //
+  for (auto n_ptr : rrt->get_path()) {
+    path_vec.push_back(n_ptr->get_id());
+  }
+  std::reverse(path_vec.begin(), path_vec.end());
+  pathlog.csv_line(path_vec);
+  pathlog.close();
+  std::cout << std::endl;
 }

@@ -79,8 +79,7 @@ public:
    * line P2-P1 equation = y - sx - y1 + sx1=0
    * B = 1, A = -s, C = -y1 + sx1
    */
-  bool intersect(Point p1, Point p2, double robot_radius=0) {
-    
+  bool intersect(Point p1, Point p2, double robot_radius=0) {   
     Eigen::VectorXd p1_vec = p1.vector();
     double x1=p1_vec(0);
     double y1=p1_vec(1);
@@ -97,8 +96,9 @@ public:
     double distance = std::abs(-1*s*m + n - y1 + s*x1) /
       std::sqrt(1+std::pow(s,2));
     bool inter = distance <= radius+robot_radius;
-    if(inter)
-      std::cout << "*** the distance between line P1P2 and center::" << center << " is: "  << distance << std::endl;
+    
+    //if(inter)
+    //std::cout << "*** the distance between line P1P2 and center::" << center << " is: "  << distance << std::endl;
     return inter;
   }
   

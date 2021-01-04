@@ -11,7 +11,7 @@ public:
     //TODO set file_name to timestamp in seconds.
     //
     //open file
-    buff.open(file_name, std::ios::out|std::ios::app);
+    buff.open(file_name, std::ios::out|std::ios::trunc);
   }
   
   /** write out the matrix in csv such that each col is spread out in a single line, and the first line is for the matrix name.
@@ -35,6 +35,21 @@ public:
           buff << mat(r,c) << std::string(",");
       }
     }
+  }
+
+  /** write a csv line
+   *
+   * @param vals std::vector of double values to write in csv
+   */
+  void csv_line(std::vector<double> vals) {
+    //add csv line
+    for (int i =0; i < vals.size(); i++) {
+      buff << vals[i];
+      if (i!=vals.size()-1)
+        buff << ",";
+    }
+    // endline
+    buff << std::endl;
   }
   
   /** write the vector in csv, spead out in a row, preceeded by the tag name

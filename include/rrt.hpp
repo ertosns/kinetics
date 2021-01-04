@@ -9,6 +9,7 @@
 #ifndef GRAPH_HDR
 #include "graph.hpp"
 #endif
+#include <assert.h>
 
 class RRT : public Graph {
 public:
@@ -19,53 +20,60 @@ public:
   //Obstacles obstacle;
   //TODO you need to put nodes/opened in Graph, and with start/end, etc getters.
   //TODO generalize the definitions
-  RRT(std::vector<Node*> nodes_, Obstacles obs, double map_width, double map_height, int step_size=1, int max_iter=3000, int epsilon=0.01, double robot_radius=0) :
-    Graph(nodes_[0], nodes_[nodes_.size()-1]),
+  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.15, int max_iter=5000, int epsilon=0.01, double robot_radius=0.02) :
+    Graph(begining, target),
     MAP_WIDTH(map_width),
     MAP_HEIGHT(map_height),
     STEP_SIZE(step_size),
     MAX_ITER(max_iter),
     EPSILON(epsilon),
     ROBOT_RADIUS(robot_radius) {
-    for (int i =0; i < nodes_.size(); i++) {
-      nodes.push_back(nodes_[i]);
-    }
+    nodes.push_back(begining);
     for (int i =0; i < obs.size(); i++) {
       obstacles.push_back(obs[i]);
     }
-    last = nodes_[0];
+    last = begining;
     std::cout << "RRT inistantiated!" << std::endl;
   }
 
   void search() {
     int c=0;
-    //TODO (fix) choose appropriate point!, or add current_node variable to rrt 
-    nodes.push_back(getRandomNode());
-    do {
+    while (!reached() && c++<MAX_ITER) {
       //std::cout << " searching..." << std::endl;
       Node *rand = getRandomNode();
       //std::cout << " rand node: " << *rand << std::endl;
       Node *near=nearest(rand);
       //std::cout << " near node found: " << *near << std::endl;
-      Node *close=newConfig(rand, near);
-      //std::cout << " new config: " << *close << std::endl;
-      for (auto obs : obstacles) {
-        //TODO (fix) bad logic, it shouldn't itersect with any of the obstacles, assure this before adding!
-        if (!obs->intersect(near->get_point(), close->get_point()),
-            ROBOT_RADIUS)  {
-          // if the new configuration close doens't itersect
-          // with the linaer near-close, then adapt it.
-          add(near, close);
-          std::cout << "|||--->added node: " << *close << std::endl;
-        }
+      Node *sample=newConfig(rand, near);
+      //std::cout << " new config: " << *sample << std::endl;
+      bool intersect=false;
+      for (int i = 0; i < obstacles.size() && !intersect; i++) {
+        intersect=obstacles[i]->intersect(near->get_point(),
+                                          sample->get_point(),
+                                          ROBOT_RADIUS);
       }
-    } while (!reached() && c++<MAX_ITER);
+      if(!intersect) {
+        // if the new configuration sample doens't itersect
+        // with the linaer near-sample, then adapt it.
+        add(near, sample);
+        std::cout << "|||--->added node: " << *sample << std::endl;
+      }
+    }
+    //connect the last found node with the target
+    Node *target = get_end();
+    Node *near_to_target=nearest(target);
+    add(near_to_target, target);
     std::cout << "finished!" << std::endl;
+  }
+
+  //TODO (fix) add nodes to graph instead
+  std::vector<Node*> get_nodes() {
+    return nodes;
   }
 
 private:
   double distance(Node *p, Node *q) {
-    return *p-*q;
+    return std::abs(*p-*q);
   }
   /** 2D sampling
    *
@@ -95,42 +103,59 @@ private:
     x = x/rd.max() * MAP_WIDTH; 
     y = y/rd.max() * MAP_HEIGHT;
     //
+    assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
+    assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
+    //
     Eigen::VectorXd  p_vec(2);
     p_vec << x, y;
-    std::cout << "scaled (" << x << "," << y << ")" << std::endl;
+    //std::cout << "scaled (" << x << "," << y << ")" << std::endl;
     return new Node(p_vec);
   }
-  Node* nearest(Node *n) {
+  //
+  Node* nearest(Node *target) {
     double min=1e9; //TODO (enh) add this to configuration
     Node *closest = nullptr;
     for (int i=0; i < nodes.size(); i++) {
-      double dist = distance(n, nodes[i]);
+      Node *cur=nodes[i];
+      double dist = distance(target, cur);
       min=std::min(dist, min);
-      closest=nodes[i];
+      closest=cur;
     }
     return closest;
   }
   //TODO (fix) adjust steps_size
   Node* newConfig(Node *q, Node *qNearest) {
+    double x,y;
     Eigen::VectorXd to = q->get_point().vector();
     Eigen::VectorXd from = qNearest->get_point().vector();
     Eigen::VectorXd intermediate = to - from;
     intermediate = intermediate / intermediate.norm();
+    /////////////////
+    // TODO learn the highest step_size possible
+    /////////////////
     Eigen::VectorXd ret = from + STEP_SIZE * intermediate;
+    x = ret(0);
+    y = ret(1);
+    assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
+    assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
+    /////////////////
     return new Node(ret);
   }
   Node* get_last() {
+    //note that vector isn't guranteed to keep elements sorted, instead use last point.
+    //TODO (fix) what is more appropriate container to use for nodes?
     return last;
   }
-  void add(Node *qNearest, Node *qNew) {
-    qNearest->add_edge(new Edge(qNew));
-    qNew->set_parent(qNearest);
-    nodes.push_back(qNew);
+  void add(Node *parent, Node *sampled) {
+    static int node_index=2; // begining has id 1
+    sampled->set_id(node_index++);
+    sampled->set_parent(parent);
+    nodes.push_back(sampled);
+    parent->add_edge(new Edge(sampled));
     //
-    
     //TODO (res) is vector gurantee to maintain order?
     //last node is nodes[-1]
-    last=qNew;
+    last=sampled; 
   }
   /** wither it reached the target node
    *
@@ -143,12 +168,14 @@ private:
     //std::cout << "end node: " << *nodes[nodes.size()-1]<<std::endl;
     //std::cout << "target node: " << *get_end() << std::endl;
     auto dist = distance(get_end(), get_last());
-    std::cout << "||--> dist: " << dist << std::endl;
-    return (dist <= EPSILON) ? true : false;
+    bool reached=(dist <= EPSILON) ? true : false;
+    //if(!reached)
+    //std::cout << "||--> dist: " << dist << std::endl;
+    return reached;
   }
   Node* last;
   std::vector<Node*> nodes;
-  const int STEP_SIZE;
+  const double STEP_SIZE;
   const int MAX_ITER;
   const int EPSILON = 1; //TODO (adjust) END_DIST_THRESHOLD
 };

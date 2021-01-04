@@ -60,11 +60,12 @@ public:
    *
    * distance is evaluated = this_point - n_point
    *@param n is pointer to Node
-   
+   *@return distance.
    */
   double operator-(Node* n) {
     return get_point() - n->get_point();
   }
+  
   double operator-(Node n) {
     return get_point() - n.get_point();
   }
@@ -84,7 +85,10 @@ public:
   bool operator==(Node* n) {
     return p==n->p;
   }
-  
+
+  void set_id(int idx) {
+    id=idx;
+  }
   int get_id() const {
     return id;
   }
@@ -172,8 +176,10 @@ protected:
 };
 
 
-std::ostream& operator<<(std::ostream& os, Node& n) {
-  os << "node (" << n.id << ")" << " - ctg: " << n.CTG;
+std::ostream& operator<<(std::ostream& os, Node &n) {
+  //TODO (fix) if id, or ctg aren't set (infinity) then don't print them!
+  Point p = n.get_point();
+  os << "node(" << n.id << ")" << p << " - ctg: " << n.CTG;
   return os;
 }
 
