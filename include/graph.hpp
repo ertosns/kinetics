@@ -32,14 +32,45 @@ public:
    * @param _open state of the node, it's always opend initially.
    * 
    */
+
   Node(Point _p, double heuristic_ctg=INFINITY,
        int _id=-1, bool _open=true) :
     CTG(heuristic_ctg), p(_p), id(_id), open_(_open),
     cost_(INFINITY) {
+    
   }
-  
   Node(Eigen::VectorXd v) : Node(Point(v)) {}
 
+  /** shallow copy of Node
+   */
+  Node(Node *n) : Node(n->get_point(),
+                       n->get_ctg(),
+                       n->get_id(),
+                       n->open()) {
+    auto edges = n->get_edges();
+    for(int i = 0; i < edges.size(); i++) {
+      add_edge(edges[i]);
+    }
+  }
+
+
+  /** shallow copy of Node
+   */
+  
+  Node(Node &n) : Node(n.get_point(),
+                      n.get_ctg(),
+                      n.get_id(),
+                      n.open()) {
+    auto edges = n.get_edges();
+    for(int i = 0; i < edges.size(); i++) {
+      add_edge(edges[i]);
+    }
+  }
+
+  double get_ctg() {
+    return CTG;
+  }
+  
   Point get_point() {
     return p;
   }
@@ -82,9 +113,18 @@ public:
     return p==n.p;
   }
 
+  bool equal(Node n) {
+    return p==n.p;
+  }
+
   bool operator==(Node* n) {
     return p==n->p;
   }
+
+  bool equal(Node* n) {
+    return p==n->p;
+  }
+
 
   void set_id(int idx) {
     id=idx;

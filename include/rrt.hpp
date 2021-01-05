@@ -20,19 +20,20 @@ public:
   //Obstacles obstacle;
   //TODO you need to put nodes/opened in Graph, and with start/end, etc getters.
   //TODO generalize the definitions
-  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.15, int max_iter=5000, int epsilon=0.01, double robot_radius=0.02) :
+  //TODO replace max_iter with allowable proximity distance
+  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.1, int max_iter=1000, int epsilon=0.01, double robot_radius=0.03) :
     Graph(begining, target),
     MAP_WIDTH(map_width),
     MAP_HEIGHT(map_height),
     STEP_SIZE(step_size),
     MAX_ITER(max_iter),
     EPSILON(epsilon),
-    ROBOT_RADIUS(robot_radius) {
+    ROBOT_RADIUS(robot_radius),
+    last(new Node(begining)) {
     nodes.push_back(begining);
     for (int i =0; i < obs.size(); i++) {
       obstacles.push_back(obs[i]);
     }
-    last = begining;
     std::cout << "RRT inistantiated!" << std::endl;
   }
 
@@ -71,7 +72,7 @@ public:
     return nodes;
   }
 
-private:
+protected:
   double distance(Node *p, Node *q) {
     return std::abs(*p-*q);
   }
@@ -115,29 +116,45 @@ private:
   Node* nearest(Node *target) {
     double min=1e9; //TODO (enh) add this to configuration
     Node *closest = nullptr;
+    Node *cur = nullptr;
+    double dist;
     for (int i=0; i < nodes.size(); i++) {
-      Node *cur=nodes[i];
-      double dist = distance(target, cur);
-      min=std::min(dist, min);
-      closest=cur;
+      cur=nodes[i];
+      dist = distance(target, cur);
+      if (dist < min) {
+        min=dist;
+        closest=cur;
+      }
     }
     return closest;
   }
   //TODO (fix) adjust steps_size
+  //such that newconfig is at x% of the distance
+  //so you can calculate it.
   Node* newConfig(Node *q, Node *qNearest) {
     double x,y;
+    x=INFINITY;
+    y=INFINITY;
     Eigen::VectorXd to = q->get_point().vector();
     Eigen::VectorXd from = qNearest->get_point().vector();
     Eigen::VectorXd intermediate = to - from;
     intermediate = intermediate / intermediate.norm();
+    Eigen::VectorXd ret;
     /////////////////
     // TODO learn the highest step_size possible
     /////////////////
-    Eigen::VectorXd ret = from + STEP_SIZE * intermediate;
-    x = ret(0);
-    y = ret(1);
-    assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
-    assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
+    double tmp_step=STEP_SIZE;
+    do {
+      ret = from + tmp_step * intermediate;
+      x = ret(0);
+      y = ret(1);
+      tmp_step/=2;
+    } while ((x > MAP_WIDTH/2 && x < -1*MAP_WIDTH/2) && 
+             (y > MAP_HEIGHT/2 && y < -1*MAP_HEIGHT/2));
+    
+    //assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
+    //assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
+    
     /////////////////
     return new Node(ret);
   }
@@ -155,7 +172,7 @@ private:
     //
     //TODO (res) is vector gurantee to maintain order?
     //last node is nodes[-1]
-    last=sampled; 
+    last = new Node(sampled);
   }
   /** wither it reached the target node
    *
@@ -173,7 +190,7 @@ private:
     //std::cout << "||--> dist: " << dist << std::endl;
     return reached;
   }
-  Node* last;
+  Node *last;
   std::vector<Node*> nodes;
   const double STEP_SIZE;
   const int MAX_ITER;

@@ -234,12 +234,11 @@ public:
     f.close();
     return;
   }
-  void read_obstacles() {
+  Obstacles read_obstacles() {
     std::ifstream f;
     f.open(obs_path);
     if (!f) {
       std::cerr <<  "filed to read: " << obs_path;
-      return;
     }
     std::stringstream buff;
     buff << f.rdbuf();
@@ -262,6 +261,7 @@ public:
       obstacles.push_back(obs);
     }
     f.close();
+    return obstacles;
   }
   AsGraph* construct_graph() {
     read_nodes();
@@ -334,6 +334,72 @@ TEST(RRT, ObstacleIntersect) {
   ASSERT_TRUE(C.intersect(p1, p2));
 }
 
+
+class RRTTest : public RRT {
+public:
+  RRTTest(Node* begining, Node* target,  Obstacles obs, double map_width=1, double map_height=1) :
+    RRT(begining, target, obs, map_width, map_height) {
+    
+  }
+  Node* get_nearest(Node *target) {
+    return nearest(target);
+    
+  }
+  double get_distance(Node *st, Node *ed) {
+    return distance(st, ed);
+  }
+  void do_add(Node *parent, Node *sampled) {
+    add(parent, sampled);
+  }
+};
+
+TEST(RRT, nearestNode) {
+  auto rg = new ReadGraph_CSV();
+  Obstacles obs =rg->read_obstacles();
+  // read begin/end
+  Eigen::VectorXd beg_vec(2);
+  beg_vec << -0.5, -0.5;
+  Node *begin = new Node(beg_vec, INFINITY, 1);
+  // end
+  Eigen::VectorXd end_vec(2);
+  end_vec << 0.5, 0.5;
+  Node *end = new Node(end_vec);
+  //
+  RRTTest rrttest(begin, end, obs);
+  //
+  // p3
+  Eigen::VectorXd p3_vec(2);
+  p3_vec << 0, 0;
+  Node *p3 = new Node(p3_vec);
+  // p4
+  Eigen::VectorXd p4_vec(2);
+  p4_vec << 0, 0.5;
+  Node *p4 = new Node(p4_vec);
+  // p5
+  Eigen::VectorXd p5_vec(2);
+  p5_vec << 0.5, 0;
+  Node *p5 = new Node(p5_vec);
+  // p6
+  Eigen::VectorXd p6_vec(2);
+  p6_vec << 0.3, 0.3;
+  Node *p6 = new Node(p6_vec);
+  // p7
+  Eigen::VectorXd p7_vec(2);
+  p7_vec << -0.3, -0.3;
+  Node *p7 = new Node(p7_vec);
+  //
+  rrttest.do_add(begin, p7); // -0.5 -- -0.3
+  rrttest.do_add(p3, p4); // 0 -- 0.5
+  rrttest.do_add(p3, p5); // 0 -- 0.5
+  rrttest.do_add(p3, p6); // 0 -- 0.3
+  rrttest.do_add(p7, p3); // -0.3 -- 0
+  //
+  // assert distance
+  ASSERT_THAT(rrttest.get_distance(begin, end), Eq(std::sqrt(2)));
+  ASSERT_THAT(rrttest.get_distance(p3, end), Eq(std::sqrt(2)/2));
+  // assert nearest 
+  ASSERT_TRUE(rrttest.get_nearest(end)->equal(p6));
+}
 
 TEST(RRT, RRTSearch) {
   auto pathlog = Logger("path.csv");
