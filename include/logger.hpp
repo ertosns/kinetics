@@ -41,7 +41,8 @@ public:
    *
    * @param vals std::vector of double values to write in csv
    */
-  void csv_line(std::vector<double> vals) {
+  template<typename T>
+  void csv_line(std::vector<T> vals) {
     //add csv line
     for (int i =0; i < vals.size(); i++) {
       buff << vals[i];

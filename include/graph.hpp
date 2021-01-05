@@ -310,6 +310,7 @@ public:
       current=parent;
       std::cout << "current: " << current << std::endl;
     }
+    std::reverse(path.begin(), path.end());
     return path;
   }
   

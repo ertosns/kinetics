@@ -302,19 +302,14 @@ TEST(MISSIONING, GraphPath) {
   g->search();
   std::cout << "||*_*|| graph searched! ||*_*||" << std::endl;
   auto path = g->get_path();
-  Logger log = Logger("path.csv");
+  Logger pathlog = Logger("path.csv");
   int c=0;
-  int size=path.size();
-  for (auto p : path) {
-    auto id=p->id;
-    std::cout << "id: " << id << std::endl; 
-    //ASSERT_THAT(truth_table[c++], Eq(id));
-    if (c==size-1)
-      log.write(id, true);
-    else
-      log.write(id, false);
+  std::vector<int> pathline;
+  for (int i = 0; i < path.size(); i++) {
+    pathline.push_back(path[i]->get_id());
   }
-  log.close();
+  pathlog.csv_line(pathline);
+  pathlog.close();
 }
 
 TEST(RRT, ObstacleIntersect) {
@@ -380,13 +375,12 @@ TEST(RRT, RRTSearch) {
   for (auto n_ptr : rrt->get_path()) {
     path_vec.push_back(n_ptr->get_id());
   }
-  std::reverse(path_vec.begin(), path_vec.end());
   pathlog.csv_line(path_vec);
   pathlog.close();
   std::cout << std::endl;
 }
 
-/*
+
 class RRTTest : public RRT {
 public:
   RRTTest(Node* begining, Node* target,  Obstacles obs, double map_width=1, double map_height=1) :
@@ -452,5 +446,3 @@ TEST(RRT, nearestNode) {
   // assert nearest 
   ASSERT_TRUE(rrttest.get_nearest(end)->equal(p6));
 }
-
-*/
