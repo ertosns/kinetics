@@ -21,7 +21,7 @@ public:
   //TODO you need to put nodes/opened in Graph, and with start/end, etc getters.
   //TODO generalize the definitions
   //TODO replace max_iter with allowable proximity distance
-  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.1, int max_iter=1000, int epsilon=0.01, double robot_radius=0.03) :
+  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.05, int max_iter=3000, int epsilon=0.01, double robot_radius=0.009) :
     Graph(begining, target),
     MAP_WIDTH(map_width),
     MAP_HEIGHT(map_height),
@@ -149,11 +149,11 @@ protected:
       x = ret(0);
       y = ret(1);
       tmp_step/=2;
-    } while ((x > MAP_WIDTH/2 && x < -1*MAP_WIDTH/2) && 
-             (y > MAP_HEIGHT/2 && y < -1*MAP_HEIGHT/2));
+    } while ((x > MAP_WIDTH/2 || x < -1*MAP_WIDTH/2) || 
+             (y > MAP_HEIGHT/2 || y < -1*MAP_HEIGHT/2));
     
-    //assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
-    //assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
+    assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
+    assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
     
     /////////////////
     return new Node(ret);
