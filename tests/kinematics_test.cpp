@@ -147,6 +147,40 @@ TEST(KINEMATICS, IKinBodyTest) {
   thetalist = kin_b.InverseKin(T, thetalist);
   ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
 }
+/*
+TEST(KINEMATICS, IKinBodyTest2) {
+  double eomg = 0.01;
+  double ev = 0.001;
+  Eigen::MatrixXd BlistT(6, 6);
+  BlistT << 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, -1, 0,
+    0, 1, 1, 1, 0, 1,
+    0.191, 0.095, 0.095, 0.095, -0.082, 0,
+    0, -0.817, -0.392, 0, 0, 0,
+    0.817, 0, 0, 0, 0, 0;
+  Eigen::MatrixXd Blist = BlistT.transpose();
+  Eigen::Matrix4d M;
+  M << -1, 0, 0, 0.817,
+    0, 0, 1, 0.191,
+    0, 1, 0, -0.006,
+    0, 0, 0, 1;
+  auto kin_b=Kinematics(nullmat, Blist.transpose(), M, eomg, ev, 20, true);
+  Eigen::Matrix4d T;
+  T << 0, 1, 0, -0.5,
+    0, 0, -1, 0.1,
+    -1, 0, 0, 0.1,
+    0, 0, 0, 1;
+  Eigen::VectorXd thetalist(6);
+  //thetalist << 2.590, -0.988, 1.705, -0.637, -0.571, -1.608;
+  thetalist << -4.156,-1.669,1.705,-0.637,-3.914,-1.426;
+  kin_b.InverseKin(T, thetalist);
+  kin_b.close();
+  //Eigen::VectorXd theta_result(3);
+  //theta_result << 1.57073819, 2.999667, 3.14153913;
+  //thetalist = kin_b.InverseKin(T, thetalist);
+  //ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
+}
+*/
 
 TEST(KINEMATICS, IKinSpaceTest) {
   Eigen::MatrixXd SlistT(3, 6);

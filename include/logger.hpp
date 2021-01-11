@@ -73,6 +73,23 @@ public:
     }
   }
 
+  /** write the vector in csv, spead out in a row, preceeded by the tag name
+   *
+   * @param vec vector to be logged
+   */
+  void write(const Eigen::VectorXd &vec) {
+    int size=vec.size();
+    if(size==0)
+      return;
+    
+    for (int i =0; i < size; i++) {
+      if(i==size-1)
+        buff << vec(i) << std::endl;
+      else
+        buff << vec(i) << std::string(",");
+    }
+  }
+
  
   /** write integer to the logging file
    *

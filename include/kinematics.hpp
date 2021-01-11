@@ -31,7 +31,8 @@ public:
   Kinematics(Eigen::MatrixXd _S, Eigen::MatrixXd _B,
              Eigen::MatrixXd _M, double _eomg=0.01,
              double _ev=0.001, int iterations=20, bool _log=false)
-    : M(_M), eomg(_eomg), ev(_ev), log(_log) {
+    : M(_M), eomg(_eomg), ev(_ev), log(_log),
+      Logger("kinematics-log.csv"){
     space_frame= (_S.rows()>0) ? true : false;
     //TODO (res) redundancy! actually it can work without the follwoing as long as Slist, Blist isn't initialized yet, you reassign those values directly.
     int nrow,ncol;
@@ -54,15 +55,13 @@ public:
       assert((Blist.rows()==6));
     //TODO add this to a config file
     maxiterations = iterations;    
-    //logging
-    Logger("kinematics.csv");
     //
     if (log) {
-      write("home configuration", M);
-      write("screw list in space frame", Slist);
-      write("screw list in body frame", Blist);
-      write("angular error", eomg);
-      write("linear error", ev);
+      //write("home configuration", M);
+      //write("screw list in space frame", Slist);
+      //write("screw list in body frame", Blist);
+      //write("angular error", eomg);
+      //write("linear error", ev);
     }
   }
   
