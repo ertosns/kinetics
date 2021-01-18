@@ -1,5 +1,9 @@
 #include <iostream>
 #include <Eigen/Dense>
+#include <Eigen/LU>
+#include <Eigen/Cholesky>
+#include <Eigen/SVD>
+#include <Eigen/QR>
 #include <vector>
 #include "gmock/gmock.h"
 //#include "gtest/gtest.h"
@@ -19,6 +23,9 @@
 #include "../include/obstacles.hpp"
 #endif
 #include "../include/rrt.hpp"
+#include <igl/active_set.h>
+#include <igl/linprog.h>
+#include "../include/manipulation.hpp"
 
 using namespace testing;
 
@@ -64,11 +71,11 @@ TEST(MISSIONING, NodeEdges) {
   v2 << 1,3,3;
   Point p1(v1);
   Point p2(v2);
-  
+
   //  construct a graph (n1) <--0.3--> (n2) ,
-//    weighted by 0.3, 
+//    weighted by 0.3,
   //  where n1(ctg)=3, n2(ctg)=4.
-  
+
   auto n1 = new Node(p1, 3, 1);
   auto n2 = new Node(p2, 4, 2);
   auto e1 = new Edge(n2, 0.3);
@@ -95,11 +102,11 @@ TEST(MISSIONING, GraphCost) {
   v2 << 1,3,3;
   Point p1(v1);
   Point p2(v2);
-  
+
   // construct a graph (n1) <--0.3--> (n2) ,
-  // weighted by 0.3, 
+  // weighted by 0.3,
   // where n1(ctg)=3, n2(ctg)=4.
-  
+
   auto n1 = new Node(p1, 3, 1);
   n1->set_cost(0);
   auto n2 = new Node(p2, 4, 2);
@@ -140,7 +147,7 @@ public:
       //TODO verify that the path is valid
       */
   }
-  
+
   //TODO use regex
   /** read csv node file
    *
@@ -186,7 +193,7 @@ public:
     }
     f.close();
   }
-  
+
   /** read csv edges file
    *
    */
@@ -282,11 +289,11 @@ public:
     Eigen::VectorXd beg_vec(2);
     beg_vec << -0.5, -0.5;
     Node *begin = new Node(beg_vec, INFINITY, 1);
-    
+
     Eigen::VectorXd end_vec(2);
     end_vec << 0.5, 0.5;
     Node *end = new Node(end_vec);
-    
+
     auto rrt = new RRT(begin, end, obstacles, 1, 1);
     return rrt;
   }
@@ -347,7 +354,7 @@ TEST(RRT, RRTSearch) {
   std::vector<Node*> nodes=rrt->get_nodes();
   for (int i = 0; i < nodes.size(); i++) {
     std::vector<double> nodeline;
-    
+
     Node *cur=nodes[i];
     Eigen::VectorXd p_vec=cur->get_point().vector();
     //TODO update ctg to the Euclidean distance to goal
@@ -385,11 +392,11 @@ class RRTTest : public RRT {
 public:
   RRTTest(Node* begining, Node* target,  Obstacles obs, double map_width=1, double map_height=1) :
     RRT(begining, target, obs, map_width, map_height) {
-    
+
   }
   Node* get_nearest(Node *target) {
     return nearest(target);
-    
+
   }
   double get_distance(Node *st, Node *ed) {
     return distance(st, ed);
@@ -443,6 +450,69 @@ TEST(RRT, nearestNode) {
   // assert distance
   ASSERT_THAT(rrttest.get_distance(begin, end), Eq(std::sqrt(2)));
   ASSERT_THAT(rrttest.get_distance(p3, end), Eq(std::sqrt(2)/2));
-  // assert nearest 
+  // assert nearest
   ASSERT_TRUE(rrttest.get_nearest(end)->equal(p6));
+}
+
+TEST(MANIPULATION, manipulate) {
+    Eigen::MatrixXd F(3,4);
+    F << 0,0,-1,2,
+        -1,0,1,0,
+        0,-1,0,1;
+    auto A = -1*Eigen::Matrix4d::Identity();
+    auto b = -1*Eigen::Vector4d::Ones();
+    auto Aeq = F;
+    auto beq = Eigen::Vector3d::Zero();
+    std::cout << "Aeq(lu).rows: " << Aeq.rows() << std::endl;
+    std::cout << "beq(rhs).rows: " << beq.rows() << std::endl;
+    auto k = A.lu().solve(b);
+    std::cout << "K: " << k << std::endl;
+    auto ak_eq= Aeq*k;
+    bool equality_check=true;
+    for (int i=0; i < b.cols(); i++) {
+        equality_check = equality_check && ak_eq(i) <= beq(i);
+    }
+    ASSERT_TRUE(equality_check);
+}
+
+TEST(MANIPULATION, closedForm) {
+    Eigen::Vector4d f(1,1,1,1);
+    Eigen::VectorXd K;
+    Eigen::MatrixXd F(3,4);
+    F << 0,0,-1,2,
+        -1,0,1,0,
+        0,-1,0,1;
+    //
+    auto Aieq = -1*Eigen::Matrix4d::Identity();
+    auto bieq = -1*Eigen::Vector4d::Ones();
+    //
+    auto Aeq = F;
+    auto beq = Eigen::Vector3d::Zero();
+    try {
+        ASSERT_TRUE(form_closure(f, Aieq, bieq, Aeq, beq, K));
+    } catch(NotFormClosure e) {
+        std::cerr << e.what() << std::endl;
+        ASSERT_TRUE(false);
+    }
+}
+
+TEST(MANIPULATION, notClosedForm) {
+    Eigen::Vector3d f(1,1,1);
+    Eigen::VectorXd K;
+    Eigen::MatrixXd F(3,3);
+    F << -1,-1,2,
+        -2,-1,3,
+        2,-1,-1;
+    //
+    auto Aieq = -1*Eigen::Matrix3d::Identity();
+    auto bieq = -1*Eigen::Vector3d::Ones();
+    //
+    auto Aeq = F;
+    auto beq = Eigen::Vector3d::Zero();
+    try {
+        ASSERT_TRUE(form_closure(f, Aieq, bieq, Aeq, beq, K));
+    } catch(NotFormClosure e) {
+        std::cerr << e.what() << std::endl;
+        ASSERT_TRUE(false);
+    }
 }
