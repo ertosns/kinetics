@@ -26,6 +26,8 @@
 #include <igl/active_set.h>
 #include <igl/linprog.h>
 #include "../include/manipulation.hpp"
+#include "algebra.hpp"
+#include <exception>
 
 using namespace testing;
 
@@ -496,23 +498,169 @@ TEST(MANIPULATION, closedForm) {
     }
 }
 
-TEST(MANIPULATION, notClosedForm) {
-    Eigen::Vector3d f(1,1,1);
+TEST(MANIPULATION, ClosedForm) {
+    //
+    int n=4;
+    /*
+    Eigen::Vector3d r1(1,0,0);
+    Eigen::Vector3d r2(2,1,0);
+    //
+    Eigen::Vector3d wc(0,0,1); //angular velocity in clock wise direction
+    Eigen::Vector3d wcc(0,0,-1); //angular velocity in counter clock wise direction
+    //
+    Eigen::Vector3d v1 = Algebra::VecToso3(wc)*r1;
+    Eigen::Vector3d v2 = Algebra::VecToso3(wcc)*r1;
+    Eigen::Vector3d v3 = Algebra::VecToso3(wc)*r2;
+    Eigen::Vector3d v4 = Algebra::VecToso3(wcc)*r2;
+    //
+    Eigen::Vector4d V1(wc(2), v1(0), v1(1),0); //
+    Eigen::Vector4d V2(wcc(2), v2(0), v2(1),0); // = Algebra::VecToso3(wcc)*r1;
+    Eigen::Vector4d V3(wc(2), v3(0), v3(1),0); // = Algebra::VecToso3(wc)*r2;
+    Eigen::Vector3d V4(wcc(2), v4(0), v4(1)); // = Algebra::VecToso3(wcc)*r2;
+    //
+    Eigen::Vector3d f1(1,0,0);
+    Eigen::Vector3d f2(0,1,0);
+    Eigen::Vector3d f3(-1,0,0);
+    Eigen::Vector3d f4(0,-1,0);
+    //
+    int m1 = (Algebra::VecToso3(r1)*f1)(2);
+    int m2 = (Algebra::VecToso3(r1)*f2)(2);
+    int m3 = (Algebra::VecToso3(r2)*f3)(2);
+    int m4 = (Algebra::VecToso3(r2)*f4)(2);
+    */
+    Eigen::MatrixXd F (3,4); //wrench |m f|.T
+    /*
+    F << -1,1,1,-1, //m
+        0,1,2,1,
+        1,0,1,2;
+    */
+    F << 1,1,-1,-1, //m
+        1,0,-1,0,
+        0,1,0,-1;
+    Eigen::Vector4d f(1,1,1,1); //TODO (res)
     Eigen::VectorXd K;
-    Eigen::MatrixXd F(3,3);
-    F << -1,-1,2,
-        -2,-1,3,
-        2,-1,-1;
-    //
-    auto Aieq = -1*Eigen::Matrix3d::Identity();
-    auto bieq = -1*Eigen::Vector3d::Ones();
-    //
     auto Aeq = F;
     auto beq = Eigen::Vector3d::Zero();
+    auto Aieq = -1*Eigen::Matrix4d::Identity(n, n);
+    auto bieq = -1*Eigen::VectorXd::Ones(n);
     try {
         ASSERT_TRUE(form_closure(f, Aieq, bieq, Aeq, beq, K));
     } catch(NotFormClosure e) {
         std::cerr << e.what() << std::endl;
         ASSERT_TRUE(false);
+    } catch(exception e) {
+        std::cerr << e.what() << std::endl;
+    }
+}
+TEST(MANIPULATION, notClosedForm) {
+    int n=4;
+    Eigen::MatrixXd F (3,n);
+    F << 1,1,1,1,
+        0,1,2,3,
+        0,0,0,0;
+    //
+    Eigen::VectorXd K;
+    auto f = Eigen::VectorXd::Ones(n);
+    auto Aeq = F;
+    auto beq = Eigen::Vector3d::Zero();
+    auto Aieq = -1*Eigen::Matrix4d::Identity(n, n);
+    auto bieq = -1*Eigen::VectorXd::Ones(n);
+
+    try {
+        ASSERT_FALSE(form_closure(f, Aieq, bieq, Aeq, beq, K));
+    } catch(NotFormClosure e) {
+        std::cerr << e.what() << std::endl;
+    } catch(exception e) {
+        std::cerr << e.what() << std::endl;
+    }
+}
+
+TEST(MANIPULATION, analyseContacts) {
+    int N, x, y, n;
+    cin >> N;
+    int Forces[N][3];
+    Eigen::Vector3d F[N];
+    for (int i=0; i < N; i++) {
+        cin >> x >> y >> n;
+        float angle=(n*M_PI)/180; //from degrees to radians
+        //contacts[i][0] = -1*1*cos(angle)-1*x*sin(angle);
+        //contacts[i][1] = cos(angle);
+        //contacts[i][2] = sin(angle);
+        //
+        F[i][0] = round(y*cos(angle)+x*sin(angle));
+        F[i][1] = round(cos(angle));
+        F[i][2] = round(sin(angle));
+        //
+    }
+    Eigen::MatrixXd W(3,N);
+    for (int i=0; i < N; i++) {
+        W.col(i) = F[i];
+    }
+    std::cout << "Wrench: " << W << std::endl;
+    //
+    Eigen::VectorXd K;
+    auto f = Eigen::VectorXd::Ones(N);
+    auto Aeq = W;
+    auto beq = Eigen::Vector3d::Zero();
+    auto Aieq = -1*Eigen::Matrix4d::Identity(N, N);
+    auto bieq = -1*Eigen::VectorXd::Ones(N);
+    bool res;
+    try {
+        res = form_closure(f, Aieq, bieq, Aeq, beq, K);
+    } catch(NotFormClosure e) {
+        std::cerr << e.what() << std::endl;
+    } catch(exception e) {
+        std::cerr << e.what() << std::endl;
+    }
+    std::cout << "the system in contact in a closed form: " << ((res) ? "TRUE":"FALSE") << std::endl;
+}
+
+
+TEST(MANIPULATION, assembly) {
+    int N, M, x, y, m, mau, normal, rb1, rb2;
+    float g=0.981
+    cin >> N >> M;
+    Eigen::Vector3d contacts[N+1][N+1];
+    for (int i=0; i <= N; i++) fill(contacts[i], contacts[i]+N+1; 0);
+    int mass[N+1];
+    for (int i=0; i < N; i++){
+        cin >> m;
+        mass[i] = m;
+    }
+    //
+    for (int i=0;i < M; i++) {
+        cin >> rb1 >> rb2 >> x >> y >> normal >> mau;
+        //
+        float angle=(normal*M_PI)/180;
+        auto p = Eigen::Vector2d(x, y);
+        auto f = mau*Eigen::Vector2d(cos(angle), sin(angle));
+        float m = (Algebra::VecToso3(p)*f)(2);
+        auto F = Eigen::Vector3d(m, f(0), f(1));
+        //action
+        contacts[rg1][rb2] = F;
+        //reaction
+        contacts[rg2][rb1] = -1*F;
+    }
+    for (int i=1; i <= N; i++) {
+        //calculate the form closure for reach rigid body.
+        int c=0;
+        for (int j=0; j <= N; j++) {
+            //how many contact point acting on this rigid body?
+            if (contacts[i][j]!=0) c++;
+        }
+        //wrench acting on current rigid body
+        Eigen::MatrixXd W = Eigen::MatrixXd(3,c);
+        for (int j=0; j<=N; j++) {
+            if (contacts[i][j]!=0)
+                W.col(j)=contacts[i][j];
+        }
+        m = mass[i];
+        auto k = Eigen::VectorXd(c);
+        auto f = Eigen::Ones(c);
+        auto Aeq = W;
+        auto beq = Eigen::Vector3d(0,0,-1*m*g);
+        auto Aieq = W;
+        auto bieq = Eigen::Zeros(c);
+        ASSERT_TRUE(form_closure(f, Aieq, bieq, Aeq, beq, k));
     }
 }

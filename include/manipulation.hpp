@@ -15,12 +15,12 @@ public:
 
 /** verify if the given vector are of closed form.
  *
- *@param f: list of linear coefficient.
- *@param A: matrix of inequality constraints.
- *@param b: right hand side of the A's constraints vector.
- *@param Aeq: matrix of equality constraints.
- *@param beq: right hand side of Aeq's constraints vector.
- *@return K: linear list minimizing those constraints.
+ @param f: list of linear coefficient.
+ @param A: matrix of inequality constraints.
+ @param b: right hand side of the A's constraints vector.
+ @param Aeq: matrix of equality constraints.
+ @param beq: right hand side of Aeq's constraints vector.
+ @return K: linear list minimizing those constraints.
 */
 bool form_closure(const Eigen::VectorXd f,
                   const Eigen::MatrixXd A, const Eigen::VectorXd b,
@@ -31,5 +31,12 @@ bool form_closure(const Eigen::VectorXd f,
     if (lu_decomp.rank()<A.rows()) {
         throw NotFormClosure();
     }
-    return igl::linprog(f, A, b, Aeq, beq, K);
+    bool res;
+    try {
+        res = igl::linprog(f, A, b, Aeq, beq, K);
+    } catch(exception e) {
+        std::cout << "Form Closure failed with Error: " << e.what() << std::endl;
+        res=false;
+    }
+    return res;
 }
