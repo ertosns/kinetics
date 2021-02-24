@@ -6,9 +6,8 @@ C++ library implementation of [_Modern Robotics: Mechanics, Planning, and Contro
 functional implementation is available in Python, Matlab, Mathematica: [ Modern Robotics ](https://github.com/NxRLab/ModernRobotics/)
 
 # required libraries:
-- make sure to install eigens library
+- make sure to install eigens, igl libraries
 - install algebra library see the instructions[Algebra](http://github.com/ertosns/algebra.git)
-- igl ....
 
 
 # installation
