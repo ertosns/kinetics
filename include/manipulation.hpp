@@ -29,6 +29,7 @@ bool form_closure(const Eigen::VectorXd f,
     FullPivLU<Eigen::MatrixXd> lu_decomp(A);
     // check the full rank using ""rank-revealing decomposition"
     if (lu_decomp.rank()<A.rows()) {
+        std::cerr << " not for closure not full rank" << std::endl;
         throw NotFormClosure();
     }
     bool res;

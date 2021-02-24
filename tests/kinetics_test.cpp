@@ -6,7 +6,7 @@
 #include "../include/kinetics.hpp"
 #include "../include/logger.hpp"
 
-# define M_PI           3.14159265358979323846 
+# define M_PI           3.14159265358979323846
 
 using namespace testing;
 
@@ -57,10 +57,10 @@ TEST(KINETICS, ForwardDynamicsTest) {
   g << 0, 0, -9.8;
   Eigen::VectorXd Ftip(6);
   Ftip << 1, 1, 1, 1, 1, 1;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -81,23 +81,23 @@ TEST(KINETICS, ForwardDynamicsTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
@@ -110,10 +110,10 @@ TEST(KINETICS, ForwardDynamicsTest) {
   ddthetalist = kinetics.ForwardDynamics(taulist,
                                          Ftip
                                          );
-  
+
   Eigen::VectorXd result(3);
   result << -0.9739, 25.5847, -32.9150;
-  
+
   ASSERT_TRUE(ddthetalist.isApprox(result, 4));
 }
 
@@ -126,18 +126,18 @@ TEST(KINETICS, EulerStepTest) {
   Eigen::VectorXd ddthetalist(3);
   ddthetalist << 2, 1.5, 1;
   double dt = 0.1;
-  
+
   std::vector<Eigen::MatrixXd> dummyMlist, dummyGlist;
   Eigen::MatrixXd dummySlist;
   auto ket = WrapKinetics(thetalist, dthetalist, ddthetalist,
                              dummyMlist, dummyGlist, dummySlist);
   ket.wrap_EulerStep(dt);
-  
+
   Eigen::VectorXd result_thetalistNext(3);
   result_thetalistNext << 0.11, 0.12, 0.13;
   Eigen::VectorXd result_dthetalistNext(3);
   result_dthetalistNext << 0.3, 0.35, 0.4;
-  
+
   ASSERT_TRUE(ket.get_pos().isApprox(result_thetalistNext, 4));
   ASSERT_TRUE(ket.get_vel().isApprox(result_dthetalistNext, 4));
 }
@@ -153,10 +153,10 @@ TEST(KINETICS, InverseDynamicsTest) {
   g << 0, 0, -9.8;
   Eigen::VectorXd Ftip(6);
   Ftip << 1, 1, 1, 1, 1, 1;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -177,29 +177,29 @@ TEST(KINETICS, InverseDynamicsTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
     0, 1, 0, -0.089, 0, 0.425;
   Eigen::MatrixXd Slist = SlistT.transpose();
-  
+
   Eigen::VectorXd taulist = Kinetics(thetalist,
                                      dthetalist,
                                      ddthetalist,
@@ -210,7 +210,7 @@ TEST(KINETICS, InverseDynamicsTest) {
     .InverseDynamics(Ftip);
   Eigen::VectorXd result(3);
   result << 74.6962, -33.0677, -3.23057;
-  
+
   ASSERT_TRUE(taulist.isApprox(result, 4));
 }
 
@@ -221,10 +221,10 @@ TEST(KINETICS, GravityForcesTest) {
   thetalist << 0.1, 0.1, 0.1;
   Eigen::VectorXd g(3);
   g << 0, 0, -9.8;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -245,23 +245,23 @@ TEST(KINETICS, GravityForcesTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
@@ -269,12 +269,12 @@ TEST(KINETICS, GravityForcesTest) {
   Eigen::MatrixXd Slist = SlistT.transpose();
   Eigen::VectorXd dummydtheta, dummyddtheta;
   auto ket = WrapKinetics(thetalist, dummydtheta, dummyddtheta, Mlist, Glist, Slist, g);
-  
+
   Eigen::VectorXd grav = ket.wrap_GravityForces();
-  
+
   Eigen::VectorXd result(3);
   result << 28.4033, -37.6409, -5.4416;
-  
+
   ASSERT_TRUE(grav.isApprox(result, 4));
 }
 
@@ -285,13 +285,13 @@ TEST(KINETICS, ForInvEuler) {
   dthetalist << 0,0,0,0,0,0;
   Eigen::VectorXd ddthetalist(6);
   ddthetalist << 0,0,0,0,0,0;
-  
+
   Eigen::VectorXd g(3);
   g << 0, 0, -9.8;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -327,7 +327,7 @@ TEST(KINETICS, ForInvEuler) {
     0, 0, 1, 0.0823,
     0, -1, 0, 0,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
@@ -335,7 +335,7 @@ TEST(KINETICS, ForInvEuler) {
   Mlist.push_back(M45);
   Mlist.push_back(M56);
   Mlist.push_back(M67);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
@@ -348,13 +348,13 @@ TEST(KINETICS, ForInvEuler) {
   G5 << 0.111172755531, 0.111172755531,0.21942,1.219,1.219,1.219;
   Eigen::VectorXd G6(6);
   G6 << 0.0171364731454,0.0171364731454,0.033822,0.1879,0.1879,0.1879;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  Glist.push_back(G4.asDiagonal()); 
-  Glist.push_back(G5.asDiagonal()); 
-  Glist.push_back(G6.asDiagonal()); 
+  Glist.push_back(G4.asDiagonal());
+  Glist.push_back(G5.asDiagonal());
+  Glist.push_back(G6.asDiagonal());
 
   Eigen::MatrixXd SlistT(6, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
@@ -363,10 +363,10 @@ TEST(KINETICS, ForInvEuler) {
     0, 1, 0, -0.089159, 0, 0.81725,
     0, 0, -1, -0.10915, 0.81725, 0,
     0, 1, 0, 0.005491, 0, 0.81725;
-  
+
   Eigen::MatrixXd Slist = SlistT.transpose();
   auto ket = WrapKinetics(thetalist, dthetalist, ddthetalist, Mlist, Glist, Slist, g);
-  
+
   Eigen::VectorXd Ftip(6);
   Ftip << 0,0,0,0,0,0;
   //TODO what is the appropriate time step?!
@@ -385,10 +385,10 @@ TEST(KINETICS, ForInvEuler) {
 TEST(KINETICS, MassMatrixTest) {
   Eigen::VectorXd thetalist(3);
   thetalist << 0.1, 0.1, 0.1;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -409,23 +409,23 @@ TEST(KINETICS, MassMatrixTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
@@ -435,12 +435,12 @@ TEST(KINETICS, MassMatrixTest) {
   Eigen::VectorXd dummydtheta, dummyddtheta;
   auto ket=WrapKinetics(thetalist, dummydtheta, dummyddtheta, Mlist, Glist, Slist);
   Eigen::MatrixXd M = ket.wrap_MassMatrix();
-  
+
   Eigen::MatrixXd result(3, 3);
   result << 22.5433, -0.3071, -0.0072,
     -0.3071, 1.9685, 0.4322,
     -0.0072, 0.4322, 0.1916;
-  
+
   ASSERT_TRUE(M.isApprox(result, 4));
 }
 
@@ -449,10 +449,10 @@ TEST(KINETICS, VelQuadraticForcesTest) {
   thetalist << 0.1, 0.1, 0.1;
   Eigen::VectorXd dthetalist(3);
   dthetalist << 0.1, 0.2, 0.3;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -473,23 +473,23 @@ TEST(KINETICS, VelQuadraticForcesTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
@@ -499,10 +499,10 @@ TEST(KINETICS, VelQuadraticForcesTest) {
   Eigen::VectorXd dummyddtheta;
   auto ket = WrapKinetics(thetalist, dthetalist, dummyddtheta, Mlist, Glist, Slist);
   Eigen::VectorXd c = ket.wrap_VelQuadraticForces();
-  
+
   Eigen::VectorXd result(3);
   result << 0.2645, -0.0551, -0.0069;
-  
+
   ASSERT_TRUE(c.isApprox(result, 4));
 }
 
@@ -511,10 +511,10 @@ TEST(KINETICS, EndEffectorForcesTest) {
   thetalist << 0.1, 0.1, 0.1;
   Eigen::VectorXd Ftip(6);
   Ftip << 1, 1, 1, 1, 1, 1;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -535,23 +535,23 @@ TEST(KINETICS, EndEffectorForcesTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
@@ -561,9 +561,9 @@ TEST(KINETICS, EndEffectorForcesTest) {
   Eigen::VectorXd dummydtheta, dummyddtheta;
   auto ket = WrapKinetics(thetalist, dummydtheta, dummyddtheta, Mlist, Glist, Slist);
   Eigen::VectorXd JTFtip = ket.wrap_EndEffectorForces(Ftip);
-  
+
   Eigen::VectorXd result(3);
   result << 1.4095, 1.8577, 1.3924;
-  
+
   ASSERT_TRUE(JTFtip.isApprox(result, 4));
 }

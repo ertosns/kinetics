@@ -5,10 +5,20 @@ C++ library implementation of [_Modern Robotics: Mechanics, Planning, and Contro
 
 functional implementation is available in Python, Matlab, Mathematica: [ Modern Robotics ](https://github.com/NxRLab/ModernRobotics/)
 
-# installation:
-- clone http://github.com/ertosns/kinetics.git
-- cd kinetics
-- install algebra [Algebra](http://github.com/ertosns/algebra.git)
-- clone http://github.com/ertosns/algebra.git
-- mkdir build; cd build
-- cmake ..; make
+# required libraries:
+- make sure to install eigens library
+- install algebra library see the instructions[Algebra](http://github.com/ertosns/algebra.git)
+- igl ....
+
+
+# installation
+
+```console
+user@name:~$ . ./install.sh
+
+```
+
+# verify kinetics is working
+```console
+user@name:~$ g++ exercises.cpp  -I /usr/include/eigen3 -lpthread -lalgebra -lkinetics
+```

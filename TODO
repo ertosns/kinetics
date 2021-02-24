@@ -1,7 +1,0 @@
-- g++ exercises.cpp -I ../include/ -L. -lkinetics -I /usr/include/eigen3/ -Lalgebra/ -lalgebra -I ../algebra/source/
-
-- update logger to produce appropriate separate csv files for each important variable, along sid the general log
-
-- employ unified style!
-
-- finish kinematics documentation first with examples, think about writing a summary?!

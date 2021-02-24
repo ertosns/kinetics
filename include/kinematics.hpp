@@ -1,13 +1,13 @@
 #include <Eigen/Dense>
 #include <iostream>
-#include "algebra.hpp"
+#include "algebra/algebra.hpp"
 #include <cassert>
 #include "logger.hpp"
 
 //TODO add eomg, ev to auto generated configuration file
 //TODO add checks on the length of given matrices, and vectors for example length of thetalist must match cols of the Slist, Blist.
 class Kinematics : public Logger{
-  
+
 public:
   //TODO move this to a general configuration file.
   // true for space state, false for body state
@@ -48,13 +48,13 @@ public:
       Blist=_B;
     }
     if (space_frame)
-      //"Slist is 6 rows of corresponding (w,v)" 
+      //"Slist is 6 rows of corresponding (w,v)"
       assert((Slist.rows()==6));
     else
-      //"Blist is 6 rows of corresponding (w,v)" 
+      //"Blist is 6 rows of corresponding (w,v)"
       assert((Blist.rows()==6));
     //TODO add this to a config file
-    maxiterations = iterations;    
+    maxiterations = iterations;
     //
     if (log) {
       //write("home configuration", M);
@@ -64,13 +64,13 @@ public:
       //write("linear error", ev);
     }
   }
-  
+
   /** Compute end effector frame
    * @param thetaList A list of joint coordinates.
    * @return T transformation matrix representing the end-effector frame when the joints are at the specified coordinates
    */
   Eigen::MatrixXd ForwardKin(const Eigen::VectorXd& thetaList);
-  
+
   /** Compute joints thetas given the end-effector configuration
    *
    * @param T is the target configuration
@@ -79,18 +79,18 @@ public:
    */
   Eigen::VectorXd InverseKin(const Eigen::MatrixXd& T,
                              Eigen::VectorXd thetalist);
-  
+
   /** Gives the Jacobian
    *
    * @param thetaList joint configuration
    * @return 6xn Spatial Jacobian
    */
   Eigen::MatrixXd Jacobian(const Eigen::MatrixXd& thetaList);
-  
+
 private:
-  /** 
+  /**
    * Compute end effector frame (used for current  spatial position calculation)
-   * 
+   *
    * @param thetaList A list of joint coordinates.
    * @return T Transfomation matrix representing the end-effector frame when the joints are at the specified coordinates
    */
@@ -102,7 +102,7 @@ private:
     }
     return T;
   }
-  
+
   /** Compute end effector frame (used for current  spatial position calculation)
    *
    * @param thetaList A list of joint coordinates.
@@ -116,7 +116,7 @@ private:
     }
     return T;
   }
-  
+
   /** Inverse Kinematics in body frame, given the mechanism configurations, IKinSpace derives the joints angles.
    *
    * @param thetalist initial angles configuration
@@ -132,7 +132,7 @@ private:
     Eigen::VectorXd Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
     Eigen::Vector3d angular(Vb(0), Vb(1), Vb(2));
     Eigen::Vector3d linear(Vb(3), Vb(4), Vb(5));
-    
+
     bool err = (angular.norm() > eomg || linear.norm() > ev);
     Eigen::MatrixXd Jb;
     double omg_norm, v_norm;
@@ -178,7 +178,7 @@ private:
     Eigen::VectorXd Vs = Algebra::Adjoint(Tfk)*Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
     Eigen::Vector3d angular(Vs(0), Vs(1), Vs(2));
     Eigen::Vector3d linear(Vs(3), Vs(4), Vs(5));
-    
+
     bool err = (angular.norm() > eomg || linear.norm() > ev);
     Eigen::MatrixXd Js;
     double omg_norm,v_norm;
@@ -228,7 +228,7 @@ private:
     }
     return Js;
   }
-  
+
   /** Gives the Jacobian in body frame
    *
    * @param thetaList joint configuration
@@ -246,5 +246,5 @@ private:
       Jb.col(i) = Algebra::Adjoint(T) * Blist.col(i);
     }
     return Jb;
-  }  
+  }
 };

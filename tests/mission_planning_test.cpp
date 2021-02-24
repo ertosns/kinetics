@@ -26,7 +26,7 @@
 #include <igl/active_set.h>
 #include <igl/linprog.h>
 #include "../include/manipulation.hpp"
-#include "algebra.hpp"
+#include "algebra/algebra.hpp"
 #include <exception>
 
 using namespace testing;
@@ -575,6 +575,7 @@ TEST(MANIPULATION, notClosedForm) {
     }
 }
 
+//adhock
 TEST(MANIPULATION, analyseContacts) {
     int N, x, y, n;
     cin >> N;
@@ -615,52 +616,89 @@ TEST(MANIPULATION, analyseContacts) {
     std::cout << "the system in contact in a closed form: " << ((res) ? "TRUE":"FALSE") << std::endl;
 }
 
-
+//THIS IS JUST AN ADHOCK
 TEST(MANIPULATION, assembly) {
-    int N, M, x, y, m, mau, normal, rb1, rb2;
-    float g=0.981
+    int N, M, rb1, rb2;
+    float x, y, m, mau, normal;
+    float g=0.981;
     cin >> N >> M;
-    Eigen::Vector3d contacts[N+1][N+1];
-    for (int i=0; i <= N; i++) fill(contacts[i], contacts[i]+N+1; 0);
-    int mass[N+1];
-    for (int i=0; i < N; i++){
-        cin >> m;
-        mass[i] = m;
+    std::vector<Eigen::Vector3d> contacts[N+1][N+1];
+    auto ZERO_VEC = Eigen::Vector3d::Zero();
+    //read contact points, and masses
+    //for (int i=0; i <= N; i++) fill(contacts[i], contacts[i]+N+1, ZERO_VEC);
+    int mass[N+1][3];
+    for (int i=1; i <=N; i++){
+        cin >> x >> y >> m;
+        mass[i][0]=x;
+        mass[i][1]=y;
+        mass[i][2]=m;
     }
-    //
+    //populated contacts, and contact reactions
     for (int i=0;i < M; i++) {
         cin >> rb1 >> rb2 >> x >> y >> normal >> mau;
         //
         float angle=(normal*M_PI)/180;
-        auto p = Eigen::Vector2d(x, y);
-        auto f = mau*Eigen::Vector2d(cos(angle), sin(angle));
-        float m = (Algebra::VecToso3(p)*f)(2);
-        auto F = Eigen::Vector3d(m, f(0), f(1));
+        std::cout << "contact's normal: " << angle << std::endl;
+        auto p = Eigen::Vector3d(x, y, 0);
+        std::cout << "contact's position p: " << p << std::endl;
+        Eigen::Vector3d f_uvec = mau*Eigen::Vector3d(cos(angle), sin(angle), 0);
+        std::cout << "contact's force f: " << f_uvec << std::endl;
+        std::cout << f_uvec(0) << endl << f_uvec(1) << endl;
+        float m = (Algebra::VecToso3(p)*f_uvec)(2);
+        //float m =0;
+        std::cout << "contact wrench's moment m: " << m << std::endl;
+        std::cout << "contact's force f: " << f_uvec << std::endl;
+        auto F = Eigen::Vector3d(m, f_uvec(0), f_uvec(1));
+        std::cout << " contact wrench F: " << F << std::endl;
         //action
-        contacts[rg1][rb2] = F;
+        contacts[rb2][rb1].push_back(F);
         //reaction
-        contacts[rg2][rb1] = -1*F;
+        contacts[rb1][rb2].push_back(-1*F);
     }
+    //process contacts
+    std::cout << "processing contacts" << std::endl;
     for (int i=1; i <= N; i++) {
         //calculate the form closure for reach rigid body.
         int c=0;
         for (int j=0; j <= N; j++) {
             //how many contact point acting on this rigid body?
-            if (contacts[i][j]!=0) c++;
+            //if (contacts[i][j]!=ZERO_VEC) c++;
+            c+=contacts[i][j].size();
         }
+        ASSERT_TRUE(c>0); //at least one non-zero force required for calculation
+        std::cout << "number of contacts acting on rigid body (" << i
+                  << ") is " << c << std::endl;
         //wrench acting on current rigid body
         Eigen::MatrixXd W = Eigen::MatrixXd(3,c);
+        int wrench_idx=0;
         for (int j=0; j<=N; j++) {
-            if (contacts[i][j]!=0)
-                W.col(j)=contacts[i][j];
+            //if (contacts[i][j]!=ZERO_VEC)
+            for (int k=0; k<contacts[i][j].size(); k++)
+                W.col(wrench_idx++)=contacts[i][j][k];
         }
-        m = mass[i];
+        std::cout << "wrench: " << W << endl;
         auto k = Eigen::VectorXd(c);
-        auto f = Eigen::Ones(c);
+        auto f = Eigen::VectorXd::Ones(c);
         auto Aeq = W;
-        auto beq = Eigen::Vector3d(0,0,-1*m*g);
+        //TODO  (fix) that isn't he wrench!! but the force
+        //you need the position of the center of mass to know the external force due to gravity
+        auto com = Eigen::Vector3d(mass[i][0], mass[i][1], 0);
+        auto g_force = Eigen::Vector3d(0,0,-1*mass[i][2]*g);
+        auto beq = -1*Algebra::VecToso3(com)*g_force;
         auto Aieq = W;
-        auto bieq = Eigen::Zeros(c);
-        ASSERT_TRUE(form_closure(f, Aieq, bieq, Aeq, beq, k));
+        auto bieq = Eigen::VectorXd::Zero(c);
+        std::cout << "K: " << k << endl
+                  << "f: " << f << endl
+                  << "Aeq: " << Aeq << endl
+                  << "beq: " << beq << endl
+                  << "Aieq: " << Aieq << endl
+                  << "bieq: " << bieq << endl;
+        bool isclosure=false;
+        try {
+            isclosure=form_closure(f, Aieq, bieq, Aeq, beq, k);
+        } catch(exception e) {
+            std::cerr << e.what() << std::endl;
+        }
+        ASSERT_TRUE(isclosure);
     }
 }

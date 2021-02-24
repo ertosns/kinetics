@@ -1,5 +1,5 @@
 #include "../include/trajectory.hpp"
-#include  "algebra.hpp"
+#include  "algebra/algebra.hpp"
 
 Eigen::MatrixXd
 Trajectory::JointTrajectory(const Eigen::VectorXd& thetastart,

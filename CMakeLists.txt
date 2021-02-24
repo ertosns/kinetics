@@ -7,23 +7,15 @@ project(${project_name})
 # debuging mode
 #set(CMAKE_BUILD_TYPE Debug)
 
-#TODO  download algebra from github.com/ertosns/algebra if it isn't present.
-add_subdirectory(algebra)
-
 include_directories(include /usr/include/eigen3)
 include_directories(include /usr/include/gtest)
 find_library(gtest gtest)
 
 set(test_name kinetics_test)
 find_library(pthread pthread)
+find_library(algebra algebra)
 
-###########################
-# include algebra header
-include_directories(include ./algebra/source)
 # add algebra library
-find_library(algebra algebra
-  PATHS ./build/algebra
-  )
 
 ########################
 # build libkinetics.a
@@ -53,7 +45,7 @@ add_executable(${test_name} ./tests/kinematics_test.cpp
   ./include/trajectory.hpp
   ./include/mission_planning.hpp
   )
-target_link_libraries(${test_name} gtest pthread)
+target_link_libraries(${test_name} gtest pthread algebra)
 
 ################
 # build docs
@@ -64,3 +56,17 @@ execute_process(COMMAND doxygen docs/Doxyfile
 execute_process(COMMAND make
   WORKING_DIRECTORY docs/latex
   )
+
+install(TARGETS ${project_name})
+install(FILES include/astar.hpp
+  include/kinematics.hpp
+  include/logger.hpp
+  include/mission.hpp
+  include/obstacles.hpp
+  include/trajectory.hpp
+  include/graph.hpp
+  include/kinetics.hpp
+  include/manipulation.hpp
+  include/mission_planning.hpp
+  include/rrt.hpp
+  DESTINATION /usr/include/${project_name})

@@ -1,0 +1,7 @@
+5    Swiper: Ki
+
+ Kinetics::InverseDynamics(const Eigen::VectorXd& Ftip) {
+ Kinetics::ForwardDynamics(const Eigen::VectorXd &taulist,
+ Kinetics::ComputedTorque(const Eigen::VectorXd& thetalistd,
+     (Kp*e + Ki * (eint + e) +
+ Kinetics::SimulateControl(const Eigen::MatrixXd& thetamatd,

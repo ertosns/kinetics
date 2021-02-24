@@ -1,9 +1,8 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
-#include "kinematics.hpp"
 #include <complex>
-//TODO use standard PI definition
+#include "kinetics/kinematics.hpp"
 
 # define PI           3.14159265358979323846
 
@@ -35,13 +34,13 @@ void q1() {
     0,-2.73,-1,0,1,0;
   auto kin_space = Kinematics(S, nullmat, M);
   auto kin_body = Kinematics(nullmat, B, M);
-  
+
   auto T=kin_space.ForwardKin(Theta);
   std::cout << "Ts: " << T << std::endl;
-  
+
   T=kin_body.ForwardKin(Theta);
   std::cout << "Tb: " << T << std::endl;
-  
+
   //c2/w2
   Eigen::MatrixXd Sw2(6,3);
   Sw2 << 0,1,0,
@@ -70,10 +69,10 @@ void q1() {
   Jw << 0,    -1,    0,    0,   -1,   0,   0, //row1
     0,     0,    1,    0,    0,   1,   0, //row2
     1,     0,    0,    1,    0,   0,   1;  //row3
-  
+
   auto Aw = Jw*Jw.transpose();
   Eigen::EigenSolver<Eigen::MatrixXd> eigw(Aw);
- 
+
 
   //TODO add this function ot the kinematics class.
   // linear ellipsoid
@@ -187,7 +186,7 @@ void w3() {
   thetalist=kin.InverseKin(T, thetalist);
   std::cout << "res: "<< thetalist << std::endl;
 }
-
+/*
 void free_fall() {
   //iterate 300 times (that is isn't accurate, i need to know the position in n seconds)
   //starting from zero{theta, dtheta, ddtheta}.
@@ -198,13 +197,13 @@ void free_fall() {
   // this need to be under iterations on trajectory of 3 seconds, or 300 times.
   //ddtheta <-ForwardDynamics
   //theta, dtheta <- EulerStep
-  // 
+  //
 }
-
+*/
 int main(int argc, char **args) {
-  //q1();
-  //ikin();
-  //w3();
-  free_fall();
+  q1();
+  ikin();
+  w3();
+  //free_fall();
   return 0;
 }

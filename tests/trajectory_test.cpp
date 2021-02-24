@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 #include "../include/trajectory.hpp"
 
-# define M_PI           3.14159265358979323846 
+# define M_PI           3.14159265358979323846
 
 /*
 using namespace testing;
@@ -24,10 +24,10 @@ TEST_F(FxTraj, ComputedTorqueTest) {
   eint << 0.2, 0.2, 0.2;
   Eigen::VectorXd g(3);
   g << 0, 0, -9.8;
-  
+
   std::vector<Eigen::MatrixXd> Mlist;
   std::vector<Eigen::MatrixXd> Glist;
-  
+
   Eigen::Matrix4d M01;
   M01 << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -48,29 +48,29 @@ TEST_F(FxTraj, ComputedTorqueTest) {
     0, 1, 0, 0,
     0, 0, 1, 0.14225,
     0, 0, 0, 1;
-  
+
   Mlist.push_back(M01);
   Mlist.push_back(M12);
   Mlist.push_back(M23);
   Mlist.push_back(M34);
-  
+
   Eigen::VectorXd G1(6);
   G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
   Eigen::VectorXd G2(6);
   G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
   Eigen::VectorXd G3(6);
   G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
-  
+
   Glist.push_back(G1.asDiagonal());
   Glist.push_back(G2.asDiagonal());
   Glist.push_back(G3.asDiagonal());
-  
+
   Eigen::MatrixXd SlistT(3, 6);
   SlistT << 1, 0, 1, 0, 1, 0,
     0, 1, 0, -0.089, 0, 0,
     0, 1, 0, -0.089, 0, 0.425;
   Eigen::MatrixXd Slist = SlistT.transpose();
-  
+
   Eigen::VectorXd thetalistd(3);
   thetalistd << 1.0, 1.0, 1.0;
   Eigen::VectorXd dthetalistd(3);
@@ -80,12 +80,12 @@ TEST_F(FxTraj, ComputedTorqueTest) {
   double Kp = 1.3;
   double Ki = 1.2;
   double Kd = 1.1;
-  
+
   Eigen::VectorXd taulist = trajectory.kinetics.ComputedTorque(thetalist, dthetalist, eint, g, Mlist, Glist, Slist, thetalistd, dthetalistd, ddthetalistd, Kp, Ki, Kd);
 
   Eigen::VectorXd result(3);
   result << 133.00525246, -29.94223324, -3.03276856;
-  
+
   ASSERT_TRUE(taulist.isApprox(result, 4));
 }
 
@@ -94,7 +94,7 @@ TEST_F(FxTraj, CubicTimeScalingTest) {
   double Tf = 2.0;
   double t = 0.6;
   double result = 0.216;
-  
+
   EXPECT_NEAR(result, trajectory.CubicTimeScaling(Tf, t), 3);
 }
 
@@ -102,7 +102,7 @@ TEST_F(FxTraj, QuinticTimeScalingTest) {
   double Tf = 2.0;
   double t = 0.6;
   double result = 0.16308;
-  
+
   EXPECT_NEAR(result, trajectory.QuinticTimeScaling(Tf, t), 3);
 }
 */
@@ -117,7 +117,7 @@ TEST_F(FxTraj, JointTrajectoryTest) {
   double Tf = 4.0;
   int N = 6;
   int method = 3;
-  
+
   Eigen::MatrixXd result(N, dof);
   result << 1, 0, 0, 1, 1, 0.2, 0, 1,
     1.0208, 0.052, 0.0624, 1.0104, 1.104, 0.3872, 0.0936, 1,
@@ -125,7 +125,7 @@ TEST_F(FxTraj, JointTrajectoryTest) {
     1.1296, 0.324, 0.3888, 1.0648, 1.648, 1.3664, 0.5832, 1,
     1.1792, 0.448, 0.5376, 1.0896, 1.896, 1.8128, 0.8064, 1,
     1.2, 0.5, 0.6, 1.1, 2, 2, 0.9, 1;
-  
+
   Eigen::MatrixXd traj = trajectory.JointTrajectory(thetastart, thetaend, Tf, N, method);
   ASSERT_TRUE(traj.isApprox(result, 4));
 }
@@ -301,7 +301,7 @@ TEST_F(FxTraj, ForwardDynamicsTrajectoryTest) {
 	Eigen::MatrixXd taumat(N, 3);
 	taumat << 3.63, -6.58, -5.57,
 		3.74, -5.55, -5.5,
-		4.31, -0.68, -5.19, 
+		4.31, -0.68, -5.19,
 		5.18, 5.63, -4.31,
 		5.85, 8.17, -2.59,
 		5.78, 2.79, -1.7,
@@ -390,12 +390,12 @@ TEST_F(FxTraj, ForwardDynamicsTrajectoryTest) {
 }
 
 TEST_F(FxTraj, SimulateControlTest) {
-	Eigen::VectorXd thetalist(3);
-	thetalist << 0.1, 0.1, 0.1;
-	Eigen::VectorXd dthetalist(3);
-	dthetalist << 0.1, 0.2, 0.3;
-	Eigen::VectorXd g(3);
-	g << 0, 0, -9.8;
+Eigen::VectorXd thetalist(3);
+thetalist << 0.1, 0.1, 0.1;
+Eigen::VectorXd dthetalist(3);
+dthetalist << 0.1, 0.2, 0.3;
+Eigen::VectorXd g(3);
+g << 0, 0, -9.8;
 
 	std::vector<Eigen::MatrixXd> Mlist;
 	std::vector<Eigen::MatrixXd> Glist;
@@ -539,7 +539,7 @@ TEST_F(FxTraj, SimulateControlTest) {
 
 	ASSERT_TRUE(traj_tau_timestep.isApprox(result_taumat, 4));
 	ASSERT_TRUE(traj_theta_timestep.isApprox(result_thetamat, 4));
-        
+
 }
 
 */
