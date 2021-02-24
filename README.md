@@ -17,7 +17,8 @@ user@name:~$ . ./install.sh
 
 ```
 
-# verify kinetics is working
+# verify kinetics is working by running example examples/exercises.cpp
 ```console
-user@name:~$ g++ exercises.cpp  -I /usr/include/eigen3 -lpthread -lalgebra -lkinetics
+user@name:~/kinetics$ cd examples
+user@name:~/kinetics/examples$ g++ exercises.cpp  -I /usr/include/eigen3 -lpthread -lalgebra -lkinetics && ./a.out
 ```
