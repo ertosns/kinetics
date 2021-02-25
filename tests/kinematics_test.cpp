@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "../include/kinematics.hpp"
 
-# define M_PI           3.14159265358979323846 
+# define M_PI           3.14159265358979323846
 
 /** \class FxKin
  *  fixture kinematics testing class
@@ -47,6 +47,19 @@ TEST(KINEMATICS, JacobianSpaceTest) {
   ASSERT_TRUE(tmp_result.isApprox(result, 4));
 }
 
+TEST(KINEMATICS, copyConstructor) {
+    Eigen::MatrixXd s_list(6, 3);
+    s_list << 0, 0, 0,
+        0, 1, -1,
+        1, 0, 0,
+        0, -0.0711, 0.0711,
+        0, 0, 0,
+        0, 0, -0.2795;
+    Kinematics kin_s=Kinematics(s_list, nullmat, nullmat);
+    Kinematics kin_s_copy = Kinematics(kin_s);
+    ASSERT_TRUE(kin_s.Slist.isApprox(kin_s_copy.Slist, 4));
+}
+
 TEST(KINEMATICS, JacobianBodyTest) {
   Eigen::MatrixXd b_list(6, 3);
   b_list << 0, 0, 0,
@@ -82,7 +95,7 @@ TEST(KINEMATICS, FKInBodyTest) {
     2, 0, 0,
     0, 1, 0,
     0, 0, 0.1;
-  auto kin_b=Kinematics(nullmat, Blist, M);
+  auto kin_b=BodyKinematics(Blist, M);
   Eigen::VectorXd thetaList(3);
   thetaList << M_PI / 2.0, 3, M_PI;
   Eigen::MatrixXd result(4, 4);
@@ -110,7 +123,7 @@ TEST(KINEMATICS, FKInSpaceTest) {
   auto kin_s=Kinematics(Slist, nullmat, M);
   Eigen::VectorXd thetaList(3);
   thetaList << M_PI / 2.0, 3, M_PI;
-  
+
   Eigen::MatrixXd result(4, 4);
   result << 0, 1, 0, -5,
     1, 0, 0, 4,

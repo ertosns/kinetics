@@ -9,62 +9,70 @@
 class Kinematics : public Logger{
 
 public:
-  //TODO move this to a general configuration file.
-  // true for space state, false for body state
-  bool space_frame;
-  // eomg, ev are error checkers
-  /*
-    eomg allowable difference between home configuration, and specified coordinates, as long as the angular difference is greater than this value then iterate.
-    ev allowable difference to iterate through between the current configuration, and the specified configuration.
-  */
-  double eomg;
-  double ev;
-  Eigen::MatrixXd M;
-  int maxiterations;
-  bool log;
-  /*
-    note those must be resized at runtime,
-    and make sure assertion isn't on.
-  */
-  Eigen::MatrixXd Slist;
-  Eigen::MatrixXd Blist;
-  Kinematics(Eigen::MatrixXd _S, Eigen::MatrixXd _B,
-             Eigen::MatrixXd _M, double _eomg=0.01,
-             double _ev=0.001, int iterations=20, bool _log=false)
-    : M(_M), eomg(_eomg), ev(_ev), log(_log),
-      Logger("kinematics-log.csv"){
-    space_frame= (_S.rows()>0) ? true : false;
-    //TODO (res) redundancy! actually it can work without the follwoing as long as Slist, Blist isn't initialized yet, you reassign those values directly.
-    int nrow,ncol;
-    if (space_frame) {
-      //nrow=_S.rows();
-      //ncol=_S.cols();
-      //Slist.resize(nrow,ncol);
-      Slist=_S;
-    } else {
-      //nrow=_B.rows();
-      //ncol=_B.cols();
-      //Blist.resize(nrow,ncol);
-      Blist=_B;
+    //TODO move this to a general configuration file.
+    // true for space state, false for body state
+    bool space_frame;
+    // eomg, ev are error checkers
+    /*
+      eomg allowable difference between home configuration, and specified coordinates, as long as the angular difference is greater than this value then iterate.
+      ev allowable difference to iterate through between the current configuration, and the specified configuration.
+    */
+    double eomg;
+    double ev;
+    Eigen::MatrixXd M;
+    int maxiterations;
+    bool log;
+    /*
+      note those must be resized at runtime,
+      and make sure assertion isn't on.
+    */
+    Eigen::MatrixXd Slist;
+    Eigen::MatrixXd Blist;
+    Kinematics(Eigen::MatrixXd _S, Eigen::MatrixXd _B,
+               Eigen::MatrixXd _M, double _eomg=0.01,
+               double _ev=0.001, int iterations=20, bool _log=false)
+        : M(_M), eomg(_eomg), ev(_ev), log(_log),
+          Logger("kinematics-log.csv"){
+        space_frame= (_S.rows()>0) ? true : false;
+        //TODO (res) redundancy! actually it can work without the follwoing as long as Slist, Blist isn't initialized yet, you reassign those values directly.
+        int nrow,ncol;
+        if (space_frame) {
+            //nrow=_S.rows();
+            //ncol=_S.cols();
+            //Slist.resize(nrow,ncol);
+            Slist=_S;
+        } else {
+            //nrow=_B.rows();
+            //ncol=_B.cols();
+            //Blist.resize(nrow,ncol);
+            Blist=_B;
+        }
+        if (space_frame)
+            //"Slist is 6 rows of corresponding (w,v)"
+            assert((Slist.rows()==6));
+        else
+            //"Blist is 6 rows of corresponding (w,v)"
+            assert((Blist.rows()==6));
+        //TODO add this to a config file
+        maxiterations = iterations;
+        //
+        if (log) {
+            //write("home configuration", M);
+            //write("screw list in space frame", Slist);
+            //write("screw list in body frame", Blist);
+            //write("angular error", eomg);
+            //write("linear error", ev);
+        }
     }
-    if (space_frame)
-      //"Slist is 6 rows of corresponding (w,v)"
-      assert((Slist.rows()==6));
-    else
-      //"Blist is 6 rows of corresponding (w,v)"
-      assert((Blist.rows()==6));
-    //TODO add this to a config file
-    maxiterations = iterations;
-    //
-    if (log) {
-      //write("home configuration", M);
-      //write("screw list in space frame", Slist);
-      //write("screw list in body frame", Blist);
-      //write("angular error", eomg);
-      //write("linear error", ev);
+    Kinematics(const Kinematics &copy) : space_frame(copy.space_frame),
+                                         eomg(copy.eomg),
+                                         ev(copy.ev),
+                                         M(copy.M),
+                                         maxiterations(copy.maxiterations),
+                                         log(copy.log),
+                                         Slist(copy.Slist),
+                                         Blist(copy.Blist) {
     }
-  }
-
   /** Compute end effector frame
    * @param thetaList A list of joint coordinates.
    * @return T transformation matrix representing the end-effector frame when the joints are at the specified coordinates
@@ -247,4 +255,35 @@ private:
     }
     return Jb;
   }
+};
+
+class SpaceKinematics : public Kinematics {
+public:
+    SpaceKinematics(Eigen::MatrixXd _S,
+                    Eigen::MatrixXd _M,
+                    double _eomg=0.01,
+                    double _ev=0.001,
+                    int iterations=20,
+                    bool _log=false) :
+        Kinematics(_S,
+                   Eigen::MatrixXd::Zero(0,0),
+                   _M,
+                   _eomg, _ev, iterations, _log) {
+        //
+    }
+};
+
+class BodyKinematics : public Kinematics {
+public:
+    BodyKinematics(Eigen::MatrixXd _B,
+                   Eigen::MatrixXd _M,
+                   double _eomg=0.01,
+                   double _ev=0.001,
+                   int iterations=20,
+                   bool _log=false) :
+        Kinematics(Eigen::MatrixXd::Zero(0,0),
+                   _B, _M,
+                   _eomg, _ev, iterations, _log){
+        //
+    }
 };
