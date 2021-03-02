@@ -1,3 +1,4 @@
+#pragma once
 #include <Eigen/Dense>
 #include <iostream>
 #include "algebra/algebra.hpp"
@@ -95,6 +96,18 @@ public:
    */
   Eigen::MatrixXd Jacobian(const Eigen::MatrixXd& thetaList);
 
+    /* calculate the difference between two different configuration
+     *
+     * @param T1: transformation matrix at time t1
+     * @param T2: transformation matrix at time t2
+     * @return Vd: twist needed to transform T1 into T2
+     */
+    Eigen::MatrixXd diff(const Eigen::MatrixXd &T1,
+                         const Eigen::MatrixXd &T2) {
+        Eigen::MatrixXd Vd = Algebra::se3ToVec(Algebra::MatrixLog6(Algebra::TransInv(T1)*T2));
+        return Vd;
+    }
+
 private:
   /**
    * Compute end effector frame (used for current  spatial position calculation)
@@ -136,8 +149,9 @@ private:
     int i = 0;
     //add this to the auto-generated configuration file
     Eigen::MatrixXd Tfk = FKinBody(thetalist);
-    Eigen::MatrixXd Tdiff = Algebra::TransInv(Tfk)*T;
-    Eigen::VectorXd Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+    //Eigen::MatrixXd Tdiff = Algebra::TransInv(Tfk)*T;
+    //Eigen::VectorXd Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+    Eigen::MatrixXd Vb = diff(Tfk, T);
     Eigen::Vector3d angular(Vb(0), Vb(1), Vb(2));
     Eigen::Vector3d linear(Vb(3), Vb(4), Vb(5));
 
@@ -151,8 +165,9 @@ private:
       i += 1;
       // iterate
       Tfk = FKinBody(thetalist);
-      Tdiff = Algebra::TransInv(Tfk)*T;
-      Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+      //Tdiff = Algebra::TransInv(Tfk)*T;
+      //Vb = Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+      Vb = diff(Tfk, T);
       angular = Eigen::Vector3d(Vb(0), Vb(1), Vb(2));
       linear = Eigen::Vector3d(Vb(3), Vb(4), Vb(5));
       omg_norm=angular.norm();
@@ -182,8 +197,9 @@ private:
   IKinSpace(Eigen::MatrixXd T, Eigen::VectorXd thetalist) {
     int i = 0;
     Eigen::MatrixXd Tfk = FKinSpace(thetalist);
-    Eigen::MatrixXd Tdiff = Algebra::TransInv(Tfk)*T;
-    Eigen::VectorXd Vs = Algebra::Adjoint(Tfk)*Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+    //Eigen::MatrixXd Tdiff = Algebra::TransInv(Tfk)*T;
+    Eigen::MatrixXd Vb = diff(Tfk, T); //Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+    Eigen::VectorXd Vs = Algebra::Adjoint(Tfk)*Vb;
     Eigen::Vector3d angular(Vs(0), Vs(1), Vs(2));
     Eigen::Vector3d linear(Vs(3), Vs(4), Vs(5));
 
@@ -197,8 +213,9 @@ private:
       i += 1;
       // iterate
       Tfk = FKinSpace(thetalist);
-      Tdiff = Algebra::TransInv(Tfk)*T;
-      Vs = Algebra::Adjoint(Tfk)*Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+      //Tdiff = Algebra::TransInv(Tfk)*T;
+      Vb=diff(Tfk, T); //Algebra::se3ToVec(Algebra::MatrixLog6(Tdiff));
+      Vs = Algebra::Adjoint(Tfk)*Vb;
       angular = Eigen::Vector3d(Vs(0), Vs(1), Vs(2));
       linear = Eigen::Vector3d(Vs(3), Vs(4), Vs(5));
       omg_norm=angular.norm();

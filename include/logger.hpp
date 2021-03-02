@@ -1,3 +1,4 @@
+#pragma once
 #include <Eigen/Dense>
 #include <fstream>
 #include <iostream>
@@ -6,27 +7,34 @@
 
 //TODO choose wither to log or not.
 class Logger {
-public:  
-  Logger(std::string file_name=std::string("kineticslib.csv")) {
+public:
+    Logger(std::string file_name=std::string("/tmp/kinetics.log")):
+        fname(file_name) {
     //TODO set file_name to timestamp in seconds.
     //
     //open file
+
     buff.open(file_name, std::ios::out|std::ios::trunc);
   }
-  
+    Logger(const Logger &copy) {
+        //TODO
+        //copy.close();
+        buff.open(copy.fname, std::ios::out|std::ios::trunc);
+    }
+
   /** write out the matrix in csv such that each col is spread out in a single line, and the first line is for the matrix name.
-   * 
+   *
    * @param name is the matrix name
    * @param mat is the matrix to log out.
    */
   void write(std::string tag, const Eigen::MatrixXd &mat) {
     buff << tag << std::endl;
-    
+
     int nrow=mat.rows();
     int ncol=mat.cols();
     if (nrow==0)
       return;
-    
+
     for (int r=0; r<nrow; r++) {
       for (int c=0; c<ncol; c++) {
         if (c==ncol-1)
@@ -52,7 +60,7 @@ public:
     // endline
     buff << std::endl;
   }
-  
+
   /** write the vector in csv, spead out in a row, preceeded by the tag name
    *
    * @param tag tag name
@@ -60,11 +68,11 @@ public:
    */
   void write(std::string tag, const Eigen::VectorXd &vec) {
     buff << tag << std::endl;
-    
+
     int size=vec.size();
     if(size==0)
       return;
-    
+
     for (int i =0; i < size; i++) {
       if(i==size-1)
         buff << vec(i) << std::endl;
@@ -81,7 +89,7 @@ public:
     int size=vec.size();
     if(size==0)
       return;
-    
+
     for (int i =0; i < size; i++) {
       if(i==size-1)
         buff << vec(i) << std::endl;
@@ -90,7 +98,7 @@ public:
     }
   }
 
- 
+
   /** write integer to the logging file
    *
    * @param tag tag name
@@ -102,7 +110,7 @@ public:
   }
 
   void write(const int i, bool end=false) {
-    if (end) 
+    if (end)
       buff << i <<  std::endl;
     else
       buff << i << ",";
@@ -114,7 +122,7 @@ public:
     else
       buff << i << ",";
   }
-  
+
   /** write double to the logging file
    *
    * @param tag tag name
@@ -124,12 +132,18 @@ public:
     buff << tag << std::endl <<
       d << std::endl;
   }
-  
-  void close() {
-    buff.close();
-  }
-  
-private:
-  std::fstream buff;
-  //std::stringstream buf;
+
+    void flush() {
+        buff.flush();
+    }
+
+    void close() {
+        buff.flush();
+        buff.close();
+    }
+
+protected:
+    std::string fname;
+    std::fstream buff;
+    //std::stringstream buf;
 };

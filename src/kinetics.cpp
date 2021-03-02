@@ -50,7 +50,6 @@ Kinetics::InverseDynamics(const Eigen::VectorXd& Ftip) {
   return taulist;
 }
 
-
 //TODO call the private(to be) euler function here, and then update the test files, and calling function (i only see Simulation funciton down).
 Eigen::VectorXd
 Kinetics::ForwardDynamics(const Eigen::VectorXd &taulist,
@@ -70,8 +69,6 @@ Kinetics::ForwardDynamics(const Eigen::VectorXd &taulist,
   ddthetalist = M.ldlt().solve(totalForce);
 
   return ddthetalist;
-
-  return Eigen::VectorXd(3);
 }
 
 Eigen::VectorXd
@@ -90,6 +87,7 @@ Kinetics::ComputedTorque(const Eigen::VectorXd& thetalistd,
     Eigen::VectorXd tau_computed = tau_feedforward + tau_inversedyn;
     return tau_computed;
 }
+
 /*
 std::vector<Eigen::MatrixXd>
 Kinetics::SimulateControl(const Eigen::MatrixXd& thetamatd,

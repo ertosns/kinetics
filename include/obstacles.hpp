@@ -1,14 +1,15 @@
+#pragma once
 #define OBSTACLES
 #include <vector>
 #include <Eigen/Dense>
 //#include <QDebug>
 //#include <QLine>
 
-class Point {  
+class Point {
 public:
   Point(Eigen::VectorXd p): p_(p){
   }
-  
+
   /** calculate the distance from the current point to point p.
    *
    *@param p given point
@@ -34,7 +35,7 @@ public:
   Eigen::VectorXd vector() {
     return p_;
   }
-  
+
   friend std::ostream& operator<<(std::ostream&, const Point&);
 private:
   const Eigen::VectorXd p_;
@@ -63,12 +64,12 @@ public:
 class CircleObs : public Obstacle {
 public:
   /** Construct a circular obstacle with:
-   * using the 
+   * using the
    * @param c coordinates of the center
    * @param r radius of the circle
    */
   CircleObs(Point c, double r): Obstacle(), center(c), radius(r) {
-    
+
   }
 
   /** calculate the distance of the perpendicular to the center.
@@ -79,7 +80,7 @@ public:
    * line P2-P1 equation = y - sx - y1 + sx1=0
    * B = 1, A = -s, C = -y1 + sx1
    */
-  bool intersect(Point p1, Point p2, double robot_radius=0) {   
+  bool intersect(Point p1, Point p2, double robot_radius=0) {
     Eigen::VectorXd p1_vec = p1.vector();
     double x1=p1_vec(0);
     double y1=p1_vec(1);
@@ -96,12 +97,12 @@ public:
     double distance = std::abs(-1*s*m + n - y1 + s*x1) /
       std::sqrt(1+std::pow(s,2));
     bool inter = distance <= radius+robot_radius;
-    
+
     //if(inter)
     //std::cout << "*** the distance between line P1P2 and center::" << center << " is: "  << distance << std::endl;
     return inter;
   }
-  
+
 private:
   Point center;
   double radius;
