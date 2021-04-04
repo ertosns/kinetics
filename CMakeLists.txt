@@ -15,6 +15,11 @@ set(test_name kinetics_test)
 find_library(pthread pthread)
 find_library(algebra algebra)
 
+
+#set c++17 using filesystem header
+set(CMAKE_CXX_STANDARD 17)
+
+
 # add algebra library
 
 ########################

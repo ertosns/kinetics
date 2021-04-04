@@ -13,6 +13,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <filesystem>
 #include <cmath>
 #ifndef GRAPH_HDR
 #include "../include/graph.hpp"
@@ -30,7 +31,7 @@
 #include <exception>
 
 using namespace testing;
-
+namespace fs = std::filesystem;
 
 TEST(MISSIONING, PointZero) {
   Eigen::VectorXd v1(2);
@@ -129,7 +130,6 @@ TEST(MISSIONING, GraphCost) {
 }
 
 
-
 class ReadGraph_CSV {
 public:
   std::string edges_path;
@@ -137,9 +137,9 @@ public:
   std::string obs_path;
   std::vector<Node*> nodes;
   Obstacles obstacles;
-  ReadGraph_CSV() : edges_path("/opt/Scene5_example/edges.csv"),
-                    nodes_path("/opt/Scene5_example/nodes.csv"),
-                    obs_path("/opt/planning_coursera/obstacles.csv"){
+    ReadGraph_CSV() : edges_path(static_cast<string>(fs::current_path())+"/../tests/data/Scene5_example/edges.csv"),
+                      nodes_path(static_cast<string>(fs::current_path())+"/../tests/data/Scene5_example/nodes.csv"),
+                      obs_path(static_cast<string>(fs::current_path())+"/../tests/data/planning_coursera/obstacles.csv") {
     /*
       std::cout << "enter edges_path: ";
       std::cin >> edges_path;
@@ -300,7 +300,7 @@ public:
     return rrt;
   }
 };
-
+/*
 TEST(MISSIONING, GraphPath) {
   //TODO (fix) move readgraph readnodes, readedges to here!
   ReadGraph_CSV rg;
@@ -320,6 +320,7 @@ TEST(MISSIONING, GraphPath) {
   pathlog.csv_line(pathline);
   pathlog.close();
 }
+*/
 
 TEST(RRT, ObstacleIntersect) {
   Eigen::VectorXd center_vec(2);
@@ -343,9 +344,9 @@ TEST(RRT, ObstacleIntersect) {
 
 
 TEST(RRT, RRTSearch) {
-  auto pathlog = Logger("path.csv");
-  auto nodelog = Logger("nodes.csv");
-  auto edgelog = Logger("edges.csv");
+    auto pathlog = Logger("path.csv");
+    auto nodelog = Logger("nodes.csv");
+    auto edgelog = Logger("edges.csv");
   std::vector<double> path_vec;
   auto rg = new ReadGraph_CSV();
   RRT *rrt = rg->construct_rrt();

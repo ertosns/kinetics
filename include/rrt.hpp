@@ -21,8 +21,8 @@ public:
   //TODO you need to put nodes/opened in Graph, and with start/end, etc getters.
   //TODO generalize the definitions
   //TODO replace max_iter with allowable proximity distance
-  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.05, int max_iter=3000, int epsilon=0.01, double robot_radius=0.009) :
-    Graph(begining, target),
+  RRT(Node* begining, Node* target,  Obstacles obs, double map_width, double map_height, double step_size=0.07, int max_iter=300, int epsilon=0.01, double robot_radius=0.009) :
+      Graph(begining, target),
     MAP_WIDTH(map_width),
     MAP_HEIGHT(map_height),
     STEP_SIZE(step_size),
@@ -42,11 +42,11 @@ public:
     while (!reached() && c++<MAX_ITER) {
       //std::cout << " searching..." << std::endl;
       Node *rand = getRandomNode();
-      //std::cout << " rand node: " << *rand << std::endl;
+      //find the nearst node in the network to the rand node
       Node *near=nearest(rand);
-      //std::cout << " near node found: " << *near << std::endl;
+      // new configuration within specific distance between the rand, and the near;
       Node *sample=newConfig(rand, near);
-      //std::cout << " new config: " << *sample << std::endl;
+      // check if line sample-near intersect any obstacle
       bool intersect=false;
       for (int i = 0; i < obstacles.size() && !intersect; i++) {
         intersect=obstacles[i]->intersect(near->get_point(),
@@ -54,8 +54,8 @@ public:
                                           ROBOT_RADIUS);
       }
       if(!intersect) {
-        // if the new configuration sample doens't itersect
-        // with the linaer near-sample, then adapt it.
+        // if the new configuration sample doens't intersect
+        // with the line near-sample, then add it to the graph.
         add(near, sample);
         std::cout << "|||--->added node: " << *sample << std::endl;
       }
@@ -101,12 +101,12 @@ protected:
     x -= (rd.max() - rd.min())/2;
     y -= (rd.max() - rd.min())/2;
     //scale point to map boundaries
-    x = x/rd.max() * MAP_WIDTH; 
+    x = x/rd.max() * MAP_WIDTH;
     y = y/rd.max() * MAP_HEIGHT;
-    //
-    assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
-    assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
-    //
+
+    //assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
+    //assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
+
     Eigen::VectorXd  p_vec(2);
     p_vec << x, y;
     //std::cout << "scaled (" << x << "," << y << ")" << std::endl;
@@ -149,12 +149,12 @@ protected:
       x = ret(0);
       y = ret(1);
       tmp_step/=2;
-    } while ((x > MAP_WIDTH/2 || x < -1*MAP_WIDTH/2) || 
+    } while ((x > MAP_WIDTH/2 || x < -1*MAP_WIDTH/2) ||
              (y > MAP_HEIGHT/2 || y < -1*MAP_HEIGHT/2));
-    
+
     assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
     assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
-    
+
     /////////////////
     return new Node(ret);
   }

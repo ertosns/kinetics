@@ -17,7 +17,7 @@ class Node {
 public:
   //heuristic estimate of the cost to goal
   //used in A* search graph
-  const double CTG; 
+  const double CTG;
   Point p;
   int id;
   //node name/id
@@ -30,14 +30,14 @@ public:
    * @param heuristic_ctg is the estimated cost to go
    * @param _id node name/id
    * @param _open state of the node, it's always opend initially.
-   * 
+   *
    */
 
   Node(Point _p, double heuristic_ctg=INFINITY,
        int _id=-1, bool _open=true) :
     CTG(heuristic_ctg), p(_p), id(_id), open_(_open),
     cost_(INFINITY) {
-    
+
   }
   Node(Eigen::VectorXd v) : Node(Point(v)) {}
 
@@ -56,21 +56,21 @@ public:
 
   /** shallow copy of Node
    */
-  
-  Node(Node &n) : Node(n.get_point(),
-                      n.get_ctg(),
-                      n.get_id(),
-                      n.open()) {
-    auto edges = n.get_edges();
-    for(int i = 0; i < edges.size(); i++) {
-      add_edge(edges[i]);
+
+    Node(Node &n) : Node(n.get_point(),
+                         n.get_ctg(),
+                         n.get_id(),
+                         n.open()) {
+        auto edges = n.get_edges();
+        for (int i = 0; i < edges.size(); i++) {
+            add_edge(edges[i]);
+        }
     }
-  }
 
   double get_ctg() {
     return CTG;
   }
-  
+
   Point get_point() {
     return p;
   }
@@ -96,7 +96,7 @@ public:
   double operator-(Node* n) {
     return get_point() - n->get_point();
   }
-  
+
   double operator-(Node n) {
     return get_point() - n.get_point();
   }
@@ -160,16 +160,16 @@ public:
   void close() {
     open_=false;
   }
-  
+
   void set_parent(Node* n) {
     parent=n;
   }
 
-  
+
   Node* get_parent() {
     return parent;
   }
-  
+
 
   bool has_parent() {
     return parent!=nullptr;
@@ -183,7 +183,7 @@ public:
       std::cerr << "Node: " << *this << " doesn't have parent!" << std::endl;
     return id;
   }
-  
+
   /** get node state open/close
    *
    *@return open_ true for opened, false for closed
@@ -193,20 +193,20 @@ public:
     return open_;
   }
 
-  
+
   std::vector<Edge*>& get_edges() {
     return edges;
   }
-  
+
 
   void apply_edge(std::function<void(Edge*)> act) {
     for (auto it=edges.begin(); it!=edges.end(); it++) {
       act(*it);
     }
   }
-  
+
   friend std::ostream& operator<<(std::ostream&, Node&);
-  
+
   //private:
 protected:
   std::vector<Edge*> edges;
@@ -253,7 +253,7 @@ std::ostream& operator<<(std::ostream& os, Edge& e) {
 
 
 /**
- * \brief base class Graph is weighted undirected search graph 
+ * \brief base class Graph is weighted undirected search graph
  */
 
 class Graph {
@@ -271,13 +271,13 @@ public:
   void set_end(Node *n) {
     ed_=n;
   }
-  
+
   Node* get_end() {
     return ed_;
   }
 
   //virtual void search()=0;
-  
+
   /** get path starting from ed backward to st, should be called after the searching algorithm.
    * first sort the graph from st_(start) to ed_(end)
    *
@@ -285,8 +285,8 @@ public:
    */
 
   //TODO (why virtual definition of search result in segfault upon call from the test case, notice that in this case you call seach for the graph's get_path, cost function.
-  
-  
+
+
   std::vector<Node*> get_path() {
     std::cout << "get_path!" << std::endl;
     std::vector<Node*> path;
@@ -313,7 +313,7 @@ public:
     std::reverse(path.begin(), path.end());
     return path;
   }
-  
+
   //TODO (fix) no longer valid, read cost from corresponding parent
   //TODO change name to get_cost
   double cost() {
@@ -329,22 +329,22 @@ public:
   }
 
   friend std::ostream& operator<<(std::ostream&, Graph&);
-  
+
 private:
   //TODO can the unique_ptr be const?
   Node* st_; /*entry*/
   Node* ed_; /*target*/
- 
+
 };
 
 /*
 std::ostream& operator<<(std::ostream &os, Graph &g) {
   int i=0;
-  
+
   for (Node* n : g.get_path()) {
     os << " -> " <<  *n << i++;
   }
-  
+
   return os;
 }
 */

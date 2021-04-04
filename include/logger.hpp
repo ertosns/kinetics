@@ -8,14 +8,13 @@
 //TODO choose wither to log or not.
 class Logger {
 public:
-    Logger(std::string file_name=std::string("/tmp/kinetics.log")):
-        fname(file_name) {
-    //TODO set file_name to timestamp in seconds.
-    //
-    //open file
-
-    buff.open(file_name, std::ios::out|std::ios::trunc);
-  }
+    Logger(std::string file_name=std::string("/tmp/kinetics.log"), bool _auto_flush=true) :
+        fname(file_name), auto_flush(_auto_flush) {
+        //TODO set file_name to timestamp in seconds.
+        //
+        //open file
+        buff.open(file_name, std::ios::out|std::ios::trunc);
+    }
     Logger(const Logger &copy) {
         //TODO
         //copy.close();
@@ -43,6 +42,8 @@ public:
           buff << mat(r,c) << std::string(",");
       }
     }
+    if (auto_flush)
+        flush();
   }
 
   /** write a csv line
@@ -59,6 +60,8 @@ public:
     }
     // endline
     buff << std::endl;
+    if (auto_flush)
+        flush();
   }
 
   /** write the vector in csv, spead out in a row, preceeded by the tag name
@@ -79,6 +82,8 @@ public:
       else
         buff << vec(i) << std::string(",");
     }
+    if (auto_flush)
+        flush();
   }
 
   /** write the vector in csv, spead out in a row, preceeded by the tag name
@@ -96,6 +101,8 @@ public:
       else
         buff << vec(i) << std::string(",");
     }
+    if (auto_flush)
+        flush();
   }
 
 
@@ -107,6 +114,8 @@ public:
   void write(std::string tag, const int i) {
     buff << tag << std::endl <<
       i << std::endl;
+    if (auto_flush)
+        flush();
   }
 
   void write(const int i, bool end=false) {
@@ -114,6 +123,8 @@ public:
       buff << i <<  std::endl;
     else
       buff << i << ",";
+    if (auto_flush)
+        flush();
   }
 
   void write(const double i, bool end=false) {
@@ -121,6 +132,8 @@ public:
       buff << i << std::endl;
     else
       buff << i << ",";
+    if (auto_flush)
+        flush();
   }
 
   /** write double to the logging file
@@ -131,6 +144,8 @@ public:
   void write(std::string tag, const double d) {
     buff << tag << std::endl <<
       d << std::endl;
+    if (auto_flush)
+        flush();
   }
 
     void flush() {
@@ -145,5 +160,6 @@ public:
 protected:
     std::string fname;
     std::fstream buff;
+    bool auto_flush;
     //std::stringstream buf;
 };
