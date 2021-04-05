@@ -8,8 +8,10 @@
 //TODO choose wither to log or not.
 class Logger {
 public:
-    Logger(std::string file_name=std::string("/tmp/kinetics.log"), bool _auto_flush=true) :
-        fname(file_name), auto_flush(_auto_flush) {
+
+    Logger(std::string file_name=std::string("/tmp/kinetics.log")):
+        fname(file_name) {
+
         //TODO set file_name to timestamp in seconds.
         //
         //open file

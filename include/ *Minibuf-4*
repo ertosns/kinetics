@@ -1,0 +1,10 @@
+100  Swiper: 
+     //
+     void update_neighbours(shared_ptr<Node> current) {
+         //current->apply_edge([current] //
+         for (auto &&e : current->get_edges()) {
+             if (!e->get_node()->open())
+                 return;
+             double tentative_cost = e->weight() + current->get_cost();
+             if (tentative_cost < e->get_node()->get_cost()) {
+                 e->get_node()->set_cost(tentative_cost);
