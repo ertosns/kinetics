@@ -46,7 +46,7 @@ public:
     Obstacles obstacles;
     ReadGraph_CSV() : edges_path(static_cast<string>(fs::current_path())+"/../tests/data/Scene5_example/edges.csv"),
                       nodes_path(static_cast<string>(fs::current_path())+"/../tests/data/Scene5_example/nodes.csv"),
-                      obs_path(static_cast<string>(fs::current_path())+"/../tests/data/planning_coursera/obstacles.csv"){
+                      obs_path(static_cast<string>(fs::current_path())+"/../tests/data/planning_coursera/obstacles.csv") {
     }
 
     /** read csv node file
@@ -177,7 +177,6 @@ public:
         read_obstacles();
         // read begin/end
         //
-
         Eigen::VectorXd beg_vec(2);
         beg_vec << -0.5, -0.5;
         auto begin = make_shared<Node>(beg_vec, INFINITY, 1);
@@ -189,4 +188,29 @@ public:
         auto rrt = new RRT(begin, end, obstacles, 1, 1);
         return rrt;
     }
+
+    ConRRT* construct_conrrt() {
+        // read obs
+        read_obstacles();
+        // read begin/end
+        //
+
+        Eigen::VectorXd beg_vec1(2);
+        beg_vec1 << -0.5, -0.5;
+        Eigen::VectorXd beg_vec2(2);
+        beg_vec2 << 0.4, -0.3;
+        vector<shared_ptr<Node>> beginings;
+        auto begin1 = make_shared<Node>(beg_vec1, INFINITY, 1);
+        auto begin2 = make_shared<Node>(beg_vec2, INFINITY, 1);
+        beginings.push_back(begin1);
+        beginings.push_back(begin2);
+
+        Eigen::VectorXd end_vec(2);
+        end_vec << 0.5, 0.5;
+        auto end = make_shared<Node>(end_vec);
+
+        auto rrt = new ConRRT(beginings, end, obstacles, 1, 1);
+        return rrt;
+    }
+
 };

@@ -11,17 +11,16 @@ class Robot {
 
 class Kilobot : public Robot {
 public:
-    std::unique_ptr<Node> pos;
-    std::unique_ptr<Node> end;
+    std::shared_ptr<Node> pos;
+    std::shared_ptr<Node> end;
     double radius;
     double step;
-    Kilobot(std::unique_ptr<Node> begining, std::unique_ptr<Node> target,
-            double step_size=0.05, double _radius=0.009) :
-        pos(std::move(begining)),
-        end(std::move(target)),
+    Kilobot(std::shared_ptr<Node> begining, std::shared_ptr<Node> target,
+            double _radius=0.009) :
+        pos(begining),
+        end(target),
         step(step_size),
-        radius(_radius)
-        {
-            //
-        }
+        radius(_radius) {
+        //
+    }
 };

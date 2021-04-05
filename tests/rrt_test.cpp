@@ -1,35 +1,25 @@
 #include <iostream>
 #include <Eigen/Dense>
-#include <Eigen/LU>
-#include <Eigen/Cholesky>
-#include <Eigen/SVD>
-#include <Eigen/QR>
-#include <vector>
 #include "gmock/gmock.h"
-//#include "gtest/gtest.h"
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
 #include <list>
 #include <vector>
 #include <cmath>
-#ifndef GRAPH_HDR
-#include "../include/graph.hpp"
-#endif
 #include "../include/logger.hpp"
+
 #ifndef OBSTACLES
 #include "../include/obstacles.hpp"
 #endif
+
 #ifndef RRT_HDR
 #include "../include/rrt.hpp"
 #endif
-#include "../include/manipulation.hpp"
+
+#ifndef UTILS
 #include "../include/utils.hpp"
-#include <exception>
+#endif
+
 
 using namespace testing;
-
 
 TEST(RRT, ObstacleIntersect) {
     Eigen::VectorXd center_vec(2);
@@ -61,6 +51,56 @@ TEST(RRT, RRTSearch) {
   //
   //add nodes
   //
+  std::vector<shared_ptr<Node>> nodes=rrt->get_nodes();
+  for (auto &&node : nodes) {
+    std::vector<double> nodeline;
+
+    auto cur=node;
+    Eigen::VectorXd p_vec=cur->get_point().vector();
+    //TODO update ctg to the Euclidean distance to goal
+    nodeline.push_back(cur->get_id());
+    nodeline.push_back(p_vec(0));
+    nodeline.push_back(p_vec(1));
+    nodeline.push_back(0); //heuristic cost to go
+    nodelog.csv_line(nodeline);
+    //
+    //add edges
+    //
+    for (auto &&e: node->get_edges()) {
+      std::vector<double> edgeline;
+      edgeline.push_back(cur->get_id());
+      edgeline.push_back(e->get_node()->get_id());
+      edgeline.push_back(0); // weight
+      edgelog.csv_line(edgeline);
+    }
+  }
+  nodelog.close();
+  edgelog.close();
+  //
+  //add path
+  //
+  for (auto &&n_ptr : rrt->get_path()) {
+      path_vec.push_back(n_ptr->get_id());
+  }
+  pathlog.csv_line(path_vec);
+  pathlog.close();
+  std::cout << std::endl;
+}
+
+TEST(RRT, ConRRTSearch) {
+    /*
+  auto pathlog = Logger("path.csv");
+  auto nodelog = Logger("nodes.csv");
+  auto edgelog = Logger("edges.csv");
+  std::vector<double> path_vec;
+  auto rg = new ReadGraph_CSV();
+  ConRRT *rrt = rg->construct_conrrt();
+  rrt->run();
+
+  //
+  //add nodes
+  //
+
   std::vector<Node*> nodes=rrt->get_nodes();
   for (int i = 0; i < nodes.size(); i++) {
     std::vector<double> nodeline;
@@ -95,26 +135,27 @@ TEST(RRT, RRTSearch) {
   pathlog.csv_line(path_vec);
   pathlog.close();
   std::cout << std::endl;
+  */
 }
+
+
 
 class RRTTest : public RRT {
 public:
-  RRTTest(Node* begining, Node* target,  Obstacles obs, double map_width=1, double map_height=1) :
-    RRT(begining, target, obs, map_width, map_height) {
-
-  }
-  Node* get_nearest(Node *target) {
-    return nearest(target);
-
-  }
-  double get_distance(Node *st, Node *ed) {
-    return distance(st, ed);
-  }
-  void do_add(Node *parent, Node *sampled) {
-    add(parent, sampled);
-  }
+    RRTTest(shared_ptr<Node> begining, shared_ptr<Node> target,
+            Obstacles obs, double map_width=1, double map_height=1) :
+        RRT(begining, target, obs, map_width, map_height) {
+    }
+    shared_ptr<Node> get_nearest(shared_ptr<Node> target) {
+        return nearest(target);
+    }
+    double get_distance(shared_ptr<Node> st, shared_ptr<Node> ed) {
+        return distance(st, ed);
+    }
+    void do_add(shared_ptr<Node> parent, shared_ptr<Node> sampled) {
+        add(parent, sampled);
+    }
 };
-
 
 TEST(RRT, nearestNode) {
   auto rg = new ReadGraph_CSV();
@@ -122,34 +163,34 @@ TEST(RRT, nearestNode) {
   // read begin/end
   Eigen::VectorXd beg_vec(2);
   beg_vec << -0.5, -0.5;
-  Node *begin = new Node(beg_vec, INFINITY, 1);
+  auto begin = make_shared<Node>(beg_vec, INFINITY, 1);
   // end
   Eigen::VectorXd end_vec(2);
   end_vec << 0.5, 0.5;
-  Node *end = new Node(end_vec);
+  auto end = make_shared<Node>(end_vec);
   //
   RRTTest rrttest(begin, end, obs);
   //
   // p3
   Eigen::VectorXd p3_vec(2);
   p3_vec << 0, 0;
-  Node *p3 = new Node(p3_vec);
+  auto p3 = make_shared<Node>(p3_vec);
   // p4
   Eigen::VectorXd p4_vec(2);
   p4_vec << 0, 0.5;
-  Node *p4 = new Node(p4_vec);
+  auto p4 = make_shared<Node>(p4_vec);
   // p5
   Eigen::VectorXd p5_vec(2);
   p5_vec << 0.5, 0;
-  Node *p5 = new Node(p5_vec);
+  auto p5 = make_shared<Node>(p5_vec);
   // p6
   Eigen::VectorXd p6_vec(2);
   p6_vec << 0.3, 0.3;
-  Node *p6 = new Node(p6_vec);
+  auto p6 = make_shared<Node>(p6_vec);
   // p7
   Eigen::VectorXd p7_vec(2);
   p7_vec << -0.3, -0.3;
-  Node *p7 = new Node(p7_vec);
+  auto p7 = make_shared<Node>(p7_vec);
   //
   rrttest.do_add(begin, p7); // -0.5 -- -0.3
   rrttest.do_add(p3, p4); // 0 -- 0.5
@@ -162,4 +203,4 @@ TEST(RRT, nearestNode) {
   ASSERT_THAT(rrttest.get_distance(p3, end), Eq(std::sqrt(2)/2));
   // assert nearest
   ASSERT_TRUE(*(rrttest.get_nearest(end))==*p6);
-}
+  }

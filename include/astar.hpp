@@ -77,14 +77,9 @@ private:
             if (tentative_cost < e->get_node()->get_cost()) {
                 e->get_node()->set_cost(tentative_cost);
                 //
-                //search if e->get_node() exist in path
-                //TODO (fix) by now current is supposed to be unique_ptr
                 e->get_node()->set_parent(current);
-                //TODO (fix) why get_end()!=e->get_node() ?!!!
                 if (e->get_node()->id==get_end()->id) {
                     //path_e=e->get_node();
-                    //TODO (fix) by now end is supposed to be unique_ptr
-                    //TODO (fix) make copy
                     set_end(e->get_node());
                 }
                 std::cout << "|--> parent of (" << e->get_node()->id << ") is (" << e->get_node()->get_parent_id() << ")" << std::endl;

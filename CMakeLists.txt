@@ -26,6 +26,8 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(${project_name} STATIC
   ./src/kinetics.cpp
   ./src/kinematics.cpp
+  ./src/graph.cpp
+  ./src/obstacles.cpp
   ./src/trajectory.cpp
   ./include/kinetics.hpp
   ./include/kinematics.hpp
@@ -41,9 +43,12 @@ add_executable(${test_name} ./tests/kinematics_test.cpp
   ./tests/trajectory_test.cpp
   ./tests/mission_planning_test.cpp
   ./tests/graph_test.cpp
+  ./tests/rrt_test.cpp
   ./src/kinematics.cpp
   ./src/kinetics.cpp
   ./src/trajectory.cpp
+  ./src/graph.cpp
+  ./src/obstacles.cpp
   ./include/kinematics.hpp
   ./include/kinetics.hpp
   ./include/trajectory.hpp

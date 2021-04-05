@@ -5,6 +5,8 @@
 #include <list>
 #include <vector>
 #include <memory>
+#include <mutex>
+#include <condition_variable>
 #include <exception>
 #ifndef OBSTACLES
 #include "obstacles.hpp"
@@ -198,14 +200,6 @@ protected:
     double cost_;
 };
 
-std::ostream& operator<<(std::ostream& os, Node &n) {
-    //TODO (fix) if id, or ctg aren't set (infinity) then don't print them!
-    Point p = n.get_point();
-    os << "node(" << n.id << ")" << p << " - ctg: " << n.CTG;
-    return os;
-}
-
-//TODO illuminate Edge
 class Edge {
 public:
     Edge(shared_ptr<Node> n, double weight=INFINITY) : weight_(weight) {
@@ -225,11 +219,6 @@ private:
     const double weight_;
 };
 
-std::ostream& operator<<(std::ostream& os, Edge& e) {
-  os << " -> " << *(e.node) << " -< weight: " << e.weight();
-  return os;
-}
-
 
 //////////////////////////////////////////////////////////
 // construct a general weighted undirected search graph
@@ -243,9 +232,7 @@ std::ostream& operator<<(std::ostream& os, Edge& e) {
 class Graph {
 public:
 
-
-    Graph(shared_ptr<Node> st,
-          shared_ptr<Node> ed) : st_(st), ed_(ed) {
+    Graph(shared_ptr<Node> st, shared_ptr<Node> ed) : st_(st), ed_(ed) {
         std::cout << "graph (" << *st << ") -> (" << *ed << ") instantiated" << std::endl;
     }
 
@@ -270,18 +257,18 @@ public:
      *@return path list<Node> of nodes.
      */
     std::vector<shared_ptr<Node>> get_path() {
-        std::cout << "get_path!" << std::endl;
         std::vector<shared_ptr<Node>> path;
         //sort the graph from st_(start) to ed_(end)
-        auto current= get_end();
-        path.push_back(current);
-
-        while (!(*current==*get_start())) {
+        shared_ptr<Node> start = get_start();
+        shared_ptr<Node> current= get_end();
+        do {
+            path.push_back(current);
             shared_ptr<Node> parent =current->get_parent();
-            //TODO (fix) move, then get!! you need to take a copy
-            path.push_back(parent);
-            current=parent;
-        }
+            if (parent==nullptr) {
+                break;
+            }
+            current = parent;
+        } while (!(*current==*start));
         std::reverse(path.begin(), path.end());
         return path;
     }
@@ -291,7 +278,6 @@ public:
         auto current = get_end();
         while (!(*current==*get_start())) {
             shared_ptr<Edge> edg = current->get_first_edge();
-            //TODO (fix) move, need copy
             shared_ptr<Edge> current_optimal_edge=edg;
             shared_ptr<Node> shortest = current->get_parent();
             cost +=current_optimal_edge->weight();
@@ -299,18 +285,110 @@ public:
         }
         return cost;
     }
-
+    std::vector<shared_ptr<Node>> get_nodes() {
+        return nodes;
+    }
+    void add_node(shared_ptr<Node> node) {
+        nodes.push_back(node);
+    }
+    double distance(shared_ptr<Node> &p, shared_ptr<Node> &q) {
+        return std::abs(*p-*q);
+    }
   friend std::ostream& operator<<(std::ostream&, Graph&);
 
 private:
     shared_ptr<Node> st_; /*entry*/
     shared_ptr<Node> ed_; /*target*/
+    std::vector<shared_ptr<Node>> nodes;
 };
 
-std::ostream& operator<<(std::ostream &os, Graph &g) {
-    int i=0;
-    for (auto &&n : g.get_path()) {
-        os << " -> " <<  *n << i++;
+/* ConGraph
+ *
+ * concurrent graph with multiply starting points, and single target.
+ */
+class ConGraph {
+    std::mutex mu;
+    std::condition_variable cond;
+    vector<shared_ptr<Node>> st_; /*entry*/
+    shared_ptr<Node> ed_; /*target*/
+    std::vector<shared_ptr<Node>> nodes;
+public:
+
+    ConGraph(std::vector<shared_ptr<Node>> st, shared_ptr<Node> ed) : st_(st), ed_(ed) {
     }
-    return os;
-}
+
+    std::vector<shared_ptr<Node>> get_start() {
+        std::unique_lock<std::mutex> locker(mu);
+        return st_;
+    }
+
+    shared_ptr<Node> get_end() {
+        return ed_;
+    }
+
+    virtual void search(shared_ptr<Node>) {};
+
+    /** get path starting from ed backward to st, should be called after the searching algorithm.
+     * first sort the graph from st_(start) to ed_(end)
+     *
+     *@return path list<Node> of nodes.
+     */
+    std::vector<shared_ptr<Node>> get_path(shared_ptr<Node> start) {
+        std::unique_lock<std::mutex> locker(mu);
+        std::cout << "get_path!" << std::endl;
+        std::vector<shared_ptr<Node>> path;
+        //sort the graph from st_(start) to ed_(end)
+        auto current= get_end();
+        path.push_back(current);
+
+        while (!(*current==*start)) {
+            shared_ptr<Node> parent =current->get_parent();
+            path.push_back(parent);
+            current=parent;
+        }
+        std::reverse(path.begin(), path.end());
+        return path;
+    }
+
+    double cost(shared_ptr<Node> start) {
+        std::unique_lock<std::mutex> locker(mu);
+        double cost;
+        auto current = get_end();
+        while (!(*current==*start)) {
+            shared_ptr<Edge> edg = current->get_first_edge();
+            shared_ptr<Edge> current_optimal_edge=edg;
+            shared_ptr<Node> shortest = current->get_parent();
+            cost +=current_optimal_edge->weight();
+            current=shortest;
+        }
+        return cost;
+    }
+    std::vector<shared_ptr<Node>> get_nodes() {
+        std::unique_lock<std::mutex> locker(mu);
+        return nodes;
+    }
+    void add_node(shared_ptr<Node> node) {
+        std::unique_lock<std::mutex> locker(mu);
+        nodes.push_back(node);
+    }
+    shared_ptr<Node> nearest(shared_ptr<Node> target) {
+        double min=1e9;
+        shared_ptr<Node> closest(nullptr);
+        shared_ptr<Node> cur(nullptr);
+        double dist;
+        vector<shared_ptr<Node>> G = get_nodes();
+        std::unique_lock<std::mutex> locker(mu);
+        for (auto &&node : G) {
+            cur=node;
+            dist = distance(target, cur);
+            if (dist < min) {
+                min=dist;
+                closest=cur;
+            }
+        }
+        return closest;
+    }
+    double distance(shared_ptr<Node> &p, shared_ptr<Node> &q) {
+        return std::abs(*p-*q);
+    }
+};

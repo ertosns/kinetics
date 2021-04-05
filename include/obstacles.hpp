@@ -1,36 +1,38 @@
 #pragma once
 #define OBSTACLES
+
 #include <vector>
 #include <Eigen/Dense>
+
 //#include <QDebug>
 //#include <QLine>
 
 class Point {
 public:
-  Point(Eigen::VectorXd p): p_(p){
-  }
+    Point(Eigen::VectorXd p): p_(p){
+    }
 
-  /** calculate the distance from the current point to point p.
-   *
-   *@param p given point
-   *@return distance
-   */
-  double operator-(Point p) {
-    return sqrt((p.vector().array() - vector().array()).square().sum());
-  }
-  /*
-  double operator-(Point *p) {
-    return sqrt((p->vector().array() - vector().array()).square().sum());
-  }
-  */
-  /** verify that p is the same as the current point
-   *
-   *@param p given point
-   *@return boolean check
-   */
-  bool operator==(Point &p) {
-    return *this-p==0;
-  }
+    /** calculate the distance from the current point to point p.
+     *
+     *@param p given point
+     *@return distance
+     */
+    double operator-(Point p) {
+        return sqrt((p.vector().array() - vector().array()).square().sum());
+    }
+    /*
+      double operator-(Point *p) {
+      return sqrt((p->vector().array() - vector().array()).square().sum());
+      }
+    */
+    /** verify that p is the same as the current point
+     *
+     *@param p given point
+     *@return boolean check
+     */
+    bool operator==(Point &p) {
+        return *this-p==0;
+    }
 
   Eigen::VectorXd vector() {
     return p_;
@@ -41,11 +43,6 @@ private:
   const Eigen::VectorXd p_;
 };
 
-std::ostream& operator<<(std::ostream& os, Point& p) {
-  auto vec = p.vector();
-  os << "(" << vec(0) << "," << vec(1) << ")";
-  return os;
-}
 
 class Obstacle
 {
@@ -161,11 +158,11 @@ public:
       }
       return false;
     */
-    return false;
+      return false;
   }
 private:
-  Point tl;
-  Point br;
+    Point tl;
+    Point br;
 };
 
 //TODO after fixing the issue with virtual function, update this to template Obstacle instead
