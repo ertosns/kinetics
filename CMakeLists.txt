@@ -15,6 +15,9 @@ set(test_name kinetics_test)
 find_library(pthread pthread)
 find_library(algebra algebra)
 
+# set ++17 compiler
+set(CMAKE_CXX_STANDARD 17)
+
 # add algebra library
 
 ########################
@@ -27,7 +30,7 @@ add_library(${project_name} STATIC
   ./include/kinetics.hpp
   ./include/kinematics.hpp
   ./include/trajectory.hpp
-  ./include/mission_planning.hpp
+  ./include/utils.hpp
   )
 
 ################
@@ -37,13 +40,14 @@ add_executable(${test_name} ./tests/kinematics_test.cpp
   ./tests/kinetics_test.cpp
   ./tests/trajectory_test.cpp
   ./tests/mission_planning_test.cpp
+  ./tests/graph_test.cpp
   ./src/kinematics.cpp
   ./src/kinetics.cpp
   ./src/trajectory.cpp
   ./include/kinematics.hpp
   ./include/kinetics.hpp
   ./include/trajectory.hpp
-  ./include/mission_planning.hpp
+  ./include/utils.hpp
   )
 target_link_libraries(${test_name} gtest pthread algebra)
 
@@ -67,6 +71,6 @@ install(FILES include/astar.hpp
   include/graph.hpp
   include/kinetics.hpp
   include/manipulation.hpp
-  include/mission_planning.hpp
   include/rrt.hpp
+  include/utils.hpp
   DESTINATION /usr/include/${project_name})

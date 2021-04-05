@@ -10,12 +10,11 @@ class Logger {
 public:
     Logger(std::string file_name=std::string("/tmp/kinetics.log")):
         fname(file_name) {
-    //TODO set file_name to timestamp in seconds.
-    //
-    //open file
-
-    buff.open(file_name, std::ios::out|std::ios::trunc);
-  }
+        //TODO set file_name to timestamp in seconds.
+        //
+        //open file
+        buff.open(file_name, std::ios::out|std::ios::trunc);
+    }
     Logger(const Logger &copy) {
         //TODO
         //copy.close();

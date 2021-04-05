@@ -1,4 +1,4 @@
-#pragma once
+#define MANIPULATION_HDR
 #include <string>
 #include <exception>
 #include <Eigen/Dense>
