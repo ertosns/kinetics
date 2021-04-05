@@ -40,105 +40,6 @@ TEST(RRT, ObstacleIntersect) {
     ASSERT_TRUE(C.intersect(p1, p2));
 }
 
-TEST(RRT, RRTSearch) {
-  auto pathlog = Logger("path.csv");
-  auto nodelog = Logger("nodes.csv");
-  auto edgelog = Logger("edges.csv");
-  std::vector<double> path_vec;
-  auto rg = new ReadGraph_CSV();
-  RRT *rrt = rg->construct_rrt();
-  rrt->search();
-  //
-  //add nodes
-  //
-  std::vector<shared_ptr<Node>> nodes=rrt->get_nodes();
-  for (auto &&node : nodes) {
-    std::vector<double> nodeline;
-
-    auto cur=node;
-    Eigen::VectorXd p_vec=cur->get_point().vector();
-    //TODO update ctg to the Euclidean distance to goal
-    nodeline.push_back(cur->get_id());
-    nodeline.push_back(p_vec(0));
-    nodeline.push_back(p_vec(1));
-    nodeline.push_back(0); //heuristic cost to go
-    nodelog.csv_line(nodeline);
-    //
-    //add edges
-    //
-    for (auto &&e: node->get_edges()) {
-      std::vector<double> edgeline;
-      edgeline.push_back(cur->get_id());
-      edgeline.push_back(e->get_node()->get_id());
-      edgeline.push_back(0); // weight
-      edgelog.csv_line(edgeline);
-    }
-  }
-  nodelog.close();
-  edgelog.close();
-  //
-  //add path
-  //
-  for (auto &&n_ptr : rrt->get_path()) {
-      path_vec.push_back(n_ptr->get_id());
-  }
-  pathlog.csv_line(path_vec);
-  pathlog.close();
-  std::cout << std::endl;
-}
-
-TEST(RRT, ConRRTSearch) {
-    /*
-  auto pathlog = Logger("path.csv");
-  auto nodelog = Logger("nodes.csv");
-  auto edgelog = Logger("edges.csv");
-  std::vector<double> path_vec;
-  auto rg = new ReadGraph_CSV();
-  ConRRT *rrt = rg->construct_conrrt();
-  rrt->run();
-
-  //
-  //add nodes
-  //
-
-  std::vector<Node*> nodes=rrt->get_nodes();
-  for (int i = 0; i < nodes.size(); i++) {
-    std::vector<double> nodeline;
-
-    Node *cur=nodes[i];
-    Eigen::VectorXd p_vec=cur->get_point().vector();
-    //TODO update ctg to the Euclidean distance to goal
-    nodeline.push_back(cur->get_id());
-    nodeline.push_back(p_vec(0));
-    nodeline.push_back(p_vec(1));
-    nodeline.push_back(0); //heuristic cost to go
-    nodelog.csv_line(nodeline);
-    //
-    //add edges
-    //
-    for (auto &&e: nodes[i]->get_edges()) {
-      std::vector<double> edgeline;
-      edgeline.push_back(cur->get_id());
-      edgeline.push_back(e->get_node()->get_id());
-      edgeline.push_back(0); // weight
-      edgelog.csv_line(edgeline);
-    }
-  }
-  nodelog.close();
-  edgelog.close();
-  //
-  //add path
-  //
-  for (auto &&n_ptr : rrt->get_path()) {
-    path_vec.push_back(n_ptr->get_id());
-  }
-  pathlog.csv_line(path_vec);
-  pathlog.close();
-  std::cout << std::endl;
-  */
-}
-
-
 
 class RRTTest : public RRT {
 public:
@@ -204,3 +105,103 @@ TEST(RRT, nearestNode) {
   // assert nearest
   ASSERT_TRUE(*(rrttest.get_nearest(end))==*p6);
   }
+
+
+TEST(RRT, RRTSearch) {
+  auto pathlog = Logger("path.csv");
+  auto nodelog = Logger("nodes.csv");
+  auto edgelog = Logger("edges.csv");
+  std::vector<double> path_vec;
+  auto rg = new ReadGraph_CSV();
+  RRT *rrt = rg->construct_rrt();
+  rrt->search();
+  //
+  //add nodes
+  //
+  std::vector<shared_ptr<Node>> nodes=rrt->get_nodes();
+  for (auto &&node : nodes) {
+    std::vector<double> nodeline;
+
+    auto cur=node;
+    Eigen::VectorXd p_vec=cur->get_point().vector();
+    //TODO update ctg to the Euclidean distance to goal
+    nodeline.push_back(cur->get_id());
+    nodeline.push_back(p_vec(0));
+    nodeline.push_back(p_vec(1));
+    nodeline.push_back(0); //heuristic cost to go
+    nodelog.csv_line(nodeline);
+    //
+    //add edges
+    //
+    for (auto &&e: node->get_edges()) {
+      std::vector<double> edgeline;
+      edgeline.push_back(cur->get_id());
+      edgeline.push_back(e->get_node()->get_id());
+      edgeline.push_back(0); // weight
+      edgelog.csv_line(edgeline);
+    }
+  }
+  nodelog.close();
+  edgelog.close();
+  //
+  //add path
+  //
+  for (auto &&n_ptr : rrt->get_path()) {
+      path_vec.push_back(n_ptr->get_id());
+  }
+  pathlog.csv_line(path_vec);
+  pathlog.close();
+  std::cout << std::endl;
+}
+
+/*
+TEST(RRT, ConRRTSearch) {
+  auto pathlog = Logger("path.csv");
+  auto nodelog = Logger("nodes.csv");
+  auto edgelog = Logger("edges.csv");
+  std::vector<double> path_vec;
+  auto rg = new ReadGraph_CSV();
+  ConRRT *rrt = rg->construct_conrrt();
+  rrt->run();
+
+  //
+  //add nodes
+  //
+
+  std::vector<Node*> nodes=rrt->get_nodes();
+  for (int i = 0; i < nodes.size(); i++) {
+    std::vector<double> nodeline;
+
+    Node *cur=nodes[i];
+    Eigen::VectorXd p_vec=cur->get_point().vector();
+    //TODO update ctg to the Euclidean distance to goal
+    nodeline.push_back(cur->get_id());
+    nodeline.push_back(p_vec(0));
+    nodeline.push_back(p_vec(1));
+    nodeline.push_back(0); //heuristic cost to go
+    nodelog.csv_line(nodeline);
+    //
+    //add edges
+    //
+    for (auto &&e: nodes[i]->get_edges()) {
+      std::vector<double> edgeline;
+      edgeline.push_back(cur->get_id());
+      edgeline.push_back(e->get_node()->get_id());
+      edgeline.push_back(0); // weight
+      edgelog.csv_line(edgeline);
+    }
+  }
+  nodelog.close();
+  edgelog.close();
+  //
+  //add path
+  //
+  for (auto &&n_ptr : rrt->get_path()) {
+    path_vec.push_back(n_ptr->get_id());
+  }
+  pathlog.csv_line(path_vec);
+  pathlog.close();
+  std::cout << std::endl;
+
+}
+*/

@@ -18,6 +18,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
+#ifndef CONFIG_HDR
+#include "../include/configfile.hpp"
+#endif
 
 using namespace std;
 
@@ -28,7 +31,7 @@ public:
     const double MAP_HEIGHT;
     const double ROBOT_RADIUS;
     //Obstacles obstacle;
-    RRT(shared_ptr<Node> begining, shared_ptr<Node> target,  Obstacles obs, double map_width, double map_height, double step_size=0.07, int max_iter=600, int epsilon=0.01, double robot_radius=0.009) :
+    RRT(shared_ptr<Node> begining, shared_ptr<Node> target,  Obstacles obs, double map_width, double map_height, double step_size=0.09, int max_iter=1200, int epsilon=0.01, double robot_radius=0.009) :
         Graph(begining, target),
         MAP_WIDTH(map_width),
         MAP_HEIGHT(map_height),
@@ -162,7 +165,7 @@ protected:
     void add(shared_ptr<Node> parent, shared_ptr<Node> sampled) {
         static int node_index=2; // begining has id 1
         sampled->set_id(node_index++);
-        sampled->set_parent(std::make_shared<Node>(parent));
+        sampled->set_parent(parent);
         add_node(sampled);
         std::shared_ptr<Edge> edge_ptr = std::make_shared<Edge>(sampled);
         parent->add_edge(edge_ptr);

@@ -34,6 +34,9 @@
 #include <igl/linprog.h>
 #include "algebra/algebra.hpp"
 #include <exception>
+#ifndef CONFIG_HDR
+#include "../include/configfile.hpp"
+#endif
 
 namespace fs = std::filesystem;
 
@@ -185,6 +188,17 @@ public:
         end_vec << 0.5, 0.5;
         auto end = make_shared<Node>(end_vec);
 
+        string RRT_CONFIG = static_cast<string>(std::filesystem::current_path()) + "/../tests/data/config/rrt_config.txt";
+        Config C(RRT_CONFIG);
+        string MAX_ITER("max_iter");
+        string STEP_SIZE("step_size");
+        string ROBOT_RADIUS("robot_radius");
+        string EPSILON("epsilon");
+        int max_iter = C.has(MAX_ITER)? std::stoi(C[MAX_ITER]) : 2000;
+        float step_size = C.has(STEP_SIZE)? std::stof(C[STEP_SIZE]) : 0.08;
+        float robot_radius = C.has(ROBOT_RADIUS)? std::stof(C[ROBOT_RADIUS]) : 0.009;
+        float epsilon = C.has(EPSILON)? std::stof(C[EPSILON]) : 0.01;
+        //auto rrt = new RRT(begin, end, obstacles, 1, 1,step_size, max_iter, epsilon, robot_radius);
         auto rrt = new RRT(begin, end, obstacles, 1, 1);
         return rrt;
     }
@@ -208,9 +222,18 @@ public:
         Eigen::VectorXd end_vec(2);
         end_vec << 0.5, 0.5;
         auto end = make_shared<Node>(end_vec);
-
-        auto rrt = new ConRRT(beginings, end, obstacles, 1, 1);
-        return rrt;
+        string RRT_CONFIG = static_cast<string>(std::filesystem::current_path()) + "/../tests/data/config/rrt_config.txt";
+        Config C(RRT_CONFIG);
+        string MAX_ITER("max_iter");
+        string STEP_SIZE("step_size");
+        string ROBOT_RADIUS("robot_radius");
+        string EPSILON("epsilon");
+        int max_iter = C.has(MAX_ITER)? std::stoi(C[MAX_ITER]) : 2000;
+        float step_size = C.has(STEP_SIZE)? std::stof(C[STEP_SIZE]) : 0.08;
+        float robot_radius = C.has(ROBOT_RADIUS)? std::stof(C[ROBOT_RADIUS]) : 0.009;
+        float epsilon = C.has(EPSILON)? std::stof(C[EPSILON]) : 0.01;
+        auto conrrt = new ConRRT(beginings, end, obstacles, 1, 1, step_size, max_iter, epsilon, robot_radius);
+        return conrrt;
     }
 
 };

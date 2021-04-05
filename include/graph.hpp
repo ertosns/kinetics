@@ -240,7 +240,6 @@ public:
         return st_;
     }
 
-
     void set_end(shared_ptr<Node> n) {
         ed_=n;
     }
@@ -261,14 +260,15 @@ public:
         //sort the graph from st_(start) to ed_(end)
         shared_ptr<Node> start = get_start();
         shared_ptr<Node> current= get_end();
-        do {
+        while (!(*current==*start)) {
             path.push_back(current);
             shared_ptr<Node> parent =current->get_parent();
             if (parent==nullptr) {
                 break;
             }
             current = parent;
-        } while (!(*current==*start));
+        }
+        path.push_back(current);
         std::reverse(path.begin(), path.end());
         return path;
     }

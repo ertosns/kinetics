@@ -1,0 +1,4 @@
+max_iter=600
+step_size=0.08
+robot_radius=0.009
+epsilon=0.01
