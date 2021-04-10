@@ -31,7 +31,7 @@ public:
     const double MAP_HEIGHT;
     const double ROBOT_RADIUS;
     //Obstacles obstacle;
-    RRT(shared_ptr<Node> begining, shared_ptr<Node> target,  Obstacles obs, double map_width, double map_height, double step_size=0.09, int max_iter=1200, int epsilon=0.01, double robot_radius=0.009) :
+    RRT(shared_ptr<Node> begining, shared_ptr<Node> target,  Obstacles obs, double map_width, double map_height, double step_size=0.09, int max_iter=3000, int epsilon=0.01, double robot_radius=0.009) :
         Graph(begining, target),
         MAP_WIDTH(map_width),
         MAP_HEIGHT(map_height),
@@ -47,27 +47,17 @@ public:
         std::cout << "RRT inistantiated!" << std::endl;
     }
 
-
     void search() {
         int c=0;
         while (!reached() && c++<MAX_ITER) {
-            auto rand = getRandomNode();
-            auto near=nearest(rand);
-            auto sample=newConfig(rand, near);
-            bool intersect=false;
-            for (int i = 0; i < obstacles.size() && !intersect; i++) {
-                intersect=obstacles[i]->intersect(near->get_point(),
-                                                  sample->get_point(),
-                                                  ROBOT_RADIUS);
-            }
-            if (!intersect) {
-                // if the new configuration sample doens't intersect
-                // with the line near-sample, then add it to the graph.
+        //while (!reached()) {
+            shared_ptr<Node> rand = getRandomNode();
+            shared_ptr<Node> near=nearest(rand);
+            shared_ptr<Node> sample=newConfig(rand, near);
+            if (!intersect(near, sample)) {
                 add(near, sample);
             }
         }
-        //connect the last found node with the target
-        //TODO .get() temporarily
         auto target = get_end();
         auto near_to_target=nearest(target);
         add(near_to_target, target);
@@ -77,48 +67,30 @@ protected:
     /** 2D sampling
      *
      */
-    //TODO (impl) 3d sampling
     shared_ptr<Node> getRandomNode() {
-        //std::cout << "getrandomnode" << std::endl;
-        /*
-          Node* ret;
-          Vector2f point(drand48() * WORLD_WIDTH, drand48() * WORLD_HEIGHT);
-          if (point.x() >= 0 && point.x() <= WORLD_WIDTH && point.y() >= 0 && point.y() <= WORLD_HEIGHT) {
-          ret = new Node;
-          ret->position = point;
-          return ret;
-          }
-          return NULL;
-        */
         double x, y;
+        Eigen::VectorXd  p_vec(2);
         std::random_device rd;
         x=rd();
         y=rd();
-        //std::cout << "getrandomNodes: " << "randomly sampled (" << x << "," << y << ")" << std::endl;
         //demean(shift) the point to the center of the map at (0,0)
         x -= (rd.max() - rd.min())/2;
         y -= (rd.max() - rd.min())/2;
         //scale point to map boundaries
         x = x/rd.max() * MAP_WIDTH;
         y = y/rd.max() * MAP_HEIGHT;
-
-        //assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
-        //assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
-
-        Eigen::VectorXd  p_vec(2);
         p_vec << x, y;
-        //std::cout << "scaled (" << x << "," << y << ")" << std::endl;
         return make_shared<Node>(p_vec);
     }
     //
     shared_ptr<Node> nearest(shared_ptr<Node> target) {
-        std::cout << "nearest target: " << *target << std::endl;
         double min=1e9; //TODO (enh) add this to configuration
-        shared_ptr<Node> closest =nullptr;
+        shared_ptr<Node> closest(nullptr);
+        shared_ptr<Node> cur(nullptr);
         double dist;
-        for (auto &&node : get_nodes()) {
-            std::cout << "cur node: " << *node << std::endl;
-            shared_ptr<Node> cur=node;
+        auto G = get_nodes();
+        for (auto &&node : G) {
+            cur=node;
             dist = distance(target, cur);
             if (dist < min) {
                 min=dist;
@@ -127,7 +99,6 @@ protected:
         }
         return closest;
     }
-    //TODO (fix) adjust steps_size
     //such that newconfig is at x% of the distance
     //so you can calculate it.
     shared_ptr<Node> newConfig(shared_ptr<Node> q, shared_ptr<Node> qNearest) {
@@ -139,9 +110,6 @@ protected:
         Eigen::VectorXd intermediate = to - from;
         intermediate = intermediate / intermediate.norm();
         Eigen::VectorXd ret;
-        /////////////////
-        // TODO learn the highest step_size possible
-        /////////////////
         double tmp_step=STEP_SIZE;
         do {
             ret = from + tmp_step * intermediate;
@@ -150,16 +118,18 @@ protected:
             tmp_step/=2;
         } while ((x > MAP_WIDTH/2 || x < -1*MAP_WIDTH/2) ||
                  (y > MAP_HEIGHT/2 || y < -1*MAP_HEIGHT/2));
-
-        assert(x <= MAP_WIDTH/2 && x >= -1*MAP_WIDTH/2);
-        assert(y <= MAP_HEIGHT/2 && y >= -1*MAP_HEIGHT/2);
-
-        /////////////////
         return make_shared<Node>(ret);
     }
+    bool intersect(shared_ptr<Node> near, shared_ptr<Node> sample) {
+        bool intersect=false;
+        for (int i = 0; i < obstacles.size() && !intersect; i++) {
+            intersect=obstacles[i]->intersect(near->get_point(),
+                                              sample->get_point(),
+                                              ROBOT_RADIUS);
+        }
+        return intersect;
+    }
     shared_ptr<Node> get_last() {
-        //note that vector isn't guranteed to keep elements sorted, instead use last point.
-        //TODO (fix) what is more appropriate container to use for nodes?
         return last;
     }
     void add(shared_ptr<Node> parent, shared_ptr<Node> sampled) {
@@ -181,8 +151,6 @@ protected:
         shared_ptr<Node> pos = get_last();
         auto dist = distance(target, pos);
         bool reached=(dist <= EPSILON) ? true : false;
-        //if(!reached)
-        //std::cout << "||--> dist: " << dist << std::endl;
         return reached;
     }
     shared_ptr<Node> last;

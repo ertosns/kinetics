@@ -182,15 +182,6 @@ public:
         return edges[0];
     }
 
-    /*
-      void apply_edge(std::function<void(unique_ptr<Edge&>)> act) {
-      for (auto it=edges.begin(); it!=edges.end(); it++) {
-      act(*it);
-      }
-
-        }
-    */
-
     friend std::ostream& operator<<(std::ostream&, Node&);
 
 protected:
@@ -262,13 +253,9 @@ public:
         shared_ptr<Node> current= get_end();
         while (!(*current==*start)) {
             path.push_back(current);
-            shared_ptr<Node> parent =current->get_parent();
-            if (parent==nullptr) {
-                break;
-            }
-            current = parent;
+            current = current->get_parent();
         }
-        path.push_back(current);
+        path.push_back(start);
         std::reverse(path.begin(), path.end());
         return path;
     }
@@ -299,7 +286,7 @@ public:
 private:
     shared_ptr<Node> st_; /*entry*/
     shared_ptr<Node> ed_; /*target*/
-    std::vector<shared_ptr<Node>> nodes;
+    std::vector<shared_ptr<Node>> nodes; //TODO illuminate last, replace vector with list, last is last index
 };
 
 /* ConGraph

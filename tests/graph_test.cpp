@@ -16,9 +16,6 @@
 #ifndef OBSTACLES
 #include "../include/obstacles.hpp"
 #endif
-#ifndef RRT_HDR
-#include "../include/rrt.hpp"
-#endif
 #ifndef UTILS
 #include "../include/utils.hpp"
 #endif
