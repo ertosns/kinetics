@@ -14,7 +14,12 @@
 
 using namespace std;
 
-class Edge;
+class SingleParent : public exception {
+    string what () {
+        std::cout << "can't have more than one parent, already has a parent" << std::endl;
+        return "Node can has only a single parent, parent is already set!";
+    }
+};
 
 class Node {
 public:
@@ -39,37 +44,18 @@ public:
     Node(Point _p, double heuristic_ctg=INFINITY,
          int _id=-1, bool _open=true) :
         CTG(heuristic_ctg), p(_p), id(_id), open_(_open),
-        cost_(INFINITY) {
+        cost_(INFINITY),
+        weight_(INFINITY) {
+    }
+    Node(Point _p, double weight, double heuristic_ctg=INFINITY,
+         int _id=-1, bool _open=true) :
+        CTG(heuristic_ctg), p(_p), id(_id), open_(_open),
+        cost_(INFINITY),
+        weight_(weight) {
     }
     Node(Eigen::VectorXd v) : Node(Point(v)) {}
-
-    Node(Node *n) : Node(n->get_point(),
-                         n->get_ctg(),
-                         n->get_id(),
-                         n->open()) {
-        for (auto &&e : n->get_edges()) {
-            add_edge(e);
-        }
-    }
-    Node(std::shared_ptr<Node> &n) : Node(n->get_point(),
-                                          n->get_ctg(),
-                                          n->get_id(),
-                                          n->open()) {
-        for (auto &&e : n->get_edges()) {
-            add_edge(e);
-        }
-    }
-
-
-    Node(Node &n) : Node(n.get_point(),
-                         n.get_ctg(),
-                         n.get_id(),
-                         n.open()) {
-        for (auto &&e : n.get_edges()) {
-            add_edge(e);
-        }
-    }
-
+    Node (Node *n) = delete;
+    Node (Node &n) = delete;
     double get_ctg() {
         return CTG;
     }
@@ -82,11 +68,11 @@ public:
      *
      *@param n output Node
      */
-    void add_edge(shared_ptr<Edge> e) {
+    void add_edge(shared_ptr<Node> e) {
         edges.push_back(e);
     }
 
-    void operator+(shared_ptr<Edge> e) {
+    void operator+(shared_ptr<Node> e) {
         edges.push_back(e);
     }
 
@@ -148,6 +134,8 @@ public:
     }
 
     void set_parent(shared_ptr<Node> n) {
+        if (has_parent())
+            throw SingleParent();
         parent=n;
     }
 
@@ -174,42 +162,29 @@ public:
         return open_;
     }
 
-    std::vector<shared_ptr<Edge>> get_edges() {
+    std::vector<shared_ptr<Node>> get_edges() {
         return edges;
     }
 
-    shared_ptr<Edge> get_first_edge() {
+    shared_ptr<Node> get_first_edge() {
         return edges[0];
     }
 
     friend std::ostream& operator<<(std::ostream&, Node&);
 
-protected:
-    std::vector<shared_ptr<Edge>> edges;
-    std::shared_ptr<Node> parent;
-    bool open_;
-    double cost_;
-};
-
-class Edge {
-public:
-    Edge(shared_ptr<Node> n, double weight=INFINITY) : weight_(weight) {
-        node=n;
-    }
-
     double weight() {
         return weight_;
     }
-    shared_ptr<Node> get_node() {
-        return node;
+    void set_weight(double w) {
+        weight_=w;
     }
-    friend std::ostream& operator<<(std::ostream&, Edge&);
-
-private:
-    shared_ptr<Node> node;
-    const double weight_;
+protected:
+    std::vector<shared_ptr<Node>> edges;
+    std::shared_ptr<Node> parent;
+    bool open_;
+    double cost_;
+    double weight_;
 };
-
 
 //////////////////////////////////////////////////////////
 // construct a general weighted undirected search graph
@@ -251,11 +226,11 @@ public:
         //sort the graph from st_(start) to ed_(end)
         shared_ptr<Node> start = get_start();
         shared_ptr<Node> current= get_end();
+        path.push_back(current);
         while (!(*current==*start)) {
-            path.push_back(current);
             current = current->get_parent();
+            path.push_back(current);
         }
-        path.push_back(start);
         std::reverse(path.begin(), path.end());
         return path;
     }
@@ -264,8 +239,8 @@ public:
         double cost;
         auto current = get_end();
         while (!(*current==*get_start())) {
-            shared_ptr<Edge> edg = current->get_first_edge();
-            shared_ptr<Edge> current_optimal_edge=edg;
+            shared_ptr<Node> edg = current->get_first_edge();
+            shared_ptr<Node> current_optimal_edge=edg;
             shared_ptr<Node> shortest = current->get_parent();
             cost +=current_optimal_edge->weight();
             current=shortest;
@@ -279,7 +254,21 @@ public:
         nodes.push_back(node);
     }
     double distance(shared_ptr<Node> &p, shared_ptr<Node> &q) {
-        return std::abs(*p-*q);
+        auto p_pt = p->get_point().vector();
+        auto q_pt = q->get_point().vector();
+        //
+        double p_x = p_pt(0);
+        double p_y = p_pt(1);
+        //
+        double q_x = q_pt(0);
+        double q_y = q_pt(1);
+        double dist  = sqrt(pow(p_x-q_x,2) + pow(p_y-q_y,2));
+        //return std::abs(*p-*q);
+        return dist;
+    }
+    //note not thread safe
+    shared_ptr<Node> get_last() {
+        return nodes[nodes.size()-1];
     }
   friend std::ostream& operator<<(std::ostream&, Graph&);
 
@@ -327,9 +316,12 @@ public:
         //sort the graph from st_(start) to ed_(end)
         auto current= get_end();
         path.push_back(current);
-
+        std::cout << "getting path between start: "
+                  << *start << ", and target: "
+                  << *current << std::endl;
         while (!(*current==*start)) {
             shared_ptr<Node> parent =current->get_parent();
+            std::cout << "current: " << *current << ", parent: " << *parent << std::endl;
             path.push_back(parent);
             current=parent;
         }
@@ -342,8 +334,8 @@ public:
         double cost;
         auto current = get_end();
         while (!(*current==*start)) {
-            shared_ptr<Edge> edg = current->get_first_edge();
-            shared_ptr<Edge> current_optimal_edge=edg;
+            shared_ptr<Node> edg = current->get_first_edge();
+            shared_ptr<Node> current_optimal_edge=edg;
             shared_ptr<Node> shortest = current->get_parent();
             cost +=current_optimal_edge->weight();
             current=shortest;
@@ -355,7 +347,7 @@ public:
         return nodes;
     }
     void add_node(shared_ptr<Node> node) {
-        std::unique_lock<std::mutex> locker(mu);
+        std::lock_guard<std::mutex> locker(mu);
         nodes.push_back(node);
     }
     shared_ptr<Node> nearest(shared_ptr<Node> target) {
@@ -375,7 +367,12 @@ public:
         }
         return closest;
     }
+
     double distance(shared_ptr<Node> &p, shared_ptr<Node> &q) {
         return std::abs(*p-*q);
+    }
+    shared_ptr<Node> get_last() {
+        std::lock_guard<std::mutex> locker(mu);
+        return nodes[nodes.size()-1];
     }
 };

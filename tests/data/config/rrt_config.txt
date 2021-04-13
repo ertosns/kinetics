@@ -1,4 +1,8 @@
-max_iter=600
+max_iter=3000
 step_size=0.08
 robot_radius=0.009
-epsilon=0.01
+epsilon=0.05
+width=1
+height=1
+window_width_ratio=1
+window_height_ratio=1

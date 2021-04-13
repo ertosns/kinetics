@@ -30,8 +30,10 @@ public:
     const double MAP_WIDTH;
     const double MAP_HEIGHT;
     const double ROBOT_RADIUS;
+    const double HEIGHT_RATIO;
+    const double WIDTH_RATIO;
     //Obstacles obstacle;
-    RRT(shared_ptr<Node> begining, shared_ptr<Node> target,  Obstacles obs, double map_width, double map_height, double step_size=0.09, int max_iter=3000, int epsilon=0.01, double robot_radius=0.009) :
+    RRT(shared_ptr<Node> begining, shared_ptr<Node> target,  Obstacles obs, double map_width, double map_height, double step_size=0.07, int max_iter=2000, double epsilon=0.001, double robot_radius=0.009, double width_ratio=1, double height_ratio=1):
         Graph(begining, target),
         MAP_WIDTH(map_width),
         MAP_HEIGHT(map_height),
@@ -39,8 +41,12 @@ public:
         MAX_ITER(max_iter),
         EPSILON(epsilon),
         ROBOT_RADIUS(robot_radius),
-        last(begining) {
+        HEIGHT_RATIO(height_ratio),
+        WIDTH_RATIO(width_ratio) {
+        begining->set_id(1);
+        std::cout << "RRT instantiated, map_width: " << map_width << ", map_height: " << map_height << ", step_size: " << step_size << ", max_iter: " << max_iter << ", epsilon: " << epsilon << ", robot_radius: " << robot_radius << std::endl;
         add_node(begining);
+        std::cout << "begining added!" << std::endl;
         for (int i =0; i < obs.size(); i++) {
             obstacles.push_back(obs[i]);
         }
@@ -50,8 +56,7 @@ public:
     void search() {
         int c=0;
         while (!reached() && c++<MAX_ITER) {
-        //while (!reached()) {
-            shared_ptr<Node> rand = getRandomNode();
+            shared_ptr<Node> rand = getWindowedRandomNode();
             shared_ptr<Node> near=nearest(rand);
             shared_ptr<Node> sample=newConfig(rand, near);
             if (!intersect(near, sample)) {
@@ -60,13 +65,13 @@ public:
         }
         auto target = get_end();
         auto near_to_target=nearest(target);
-        add(near_to_target, target);
+        add(near_to_target, target); //add target to the nodes, and complete the graph
     }
 
 protected:
     /** 2D sampling
      *
-     */
+    */
     shared_ptr<Node> getRandomNode() {
         double x, y;
         Eigen::VectorXd  p_vec(2);
@@ -79,6 +84,33 @@ protected:
         //scale point to map boundaries
         x = x/rd.max() * MAP_WIDTH;
         y = y/rd.max() * MAP_HEIGHT;
+        //
+        p_vec << x, y;
+        return make_shared<Node>(p_vec);
+    }
+    shared_ptr<Node> getWindowedRandomNode() {
+        auto target = get_end();
+        auto last = nearest(target);
+        // you need the nearest to the target
+        auto last_pt = last->get_point().vector();
+        double X = last_pt(0);
+        double Y = last_pt(1);
+        //
+        double x, y;
+        Eigen::VectorXd  p_vec(2);
+        std::random_device rd;
+        do {
+            x=rd();
+            y=rd();
+            //demean(shift) the point to the center of the map at (0,0)
+            x -= (rd.max() - rd.min())/2;
+            y -= (rd.max() - rd.min())/2;
+            //scale point to map boundaries
+            //TODO (impl) if the target on the right add, otherwise subtract from (X,Y)
+            x = x/rd.max() * MAP_WIDTH/4 + X;
+            y = y/rd.max() * MAP_HEIGHT/4 + Y;
+        } while (!(x<MAP_WIDTH/(2*WIDTH_RATIO) || x>-1*MAP_WIDTH/(2*HEIGHT_RATIO)) ||
+                 !(y<MAP_HEIGHT/2 || y>-1*MAP_HEIGHT/2));
         p_vec << x, y;
         return make_shared<Node>(p_vec);
     }
@@ -129,17 +161,15 @@ protected:
         }
         return intersect;
     }
-    shared_ptr<Node> get_last() {
-        return last;
-    }
+
     void add(shared_ptr<Node> parent, shared_ptr<Node> sampled) {
-        static int node_index=2; // begining has id 1
-        sampled->set_id(node_index++);
+        int new_index = get_last()->get_id()+1;
+        sampled->set_id(new_index);
+        assert(!sampled->has_parent());
         sampled->set_parent(parent);
         add_node(sampled);
-        std::shared_ptr<Edge> edge_ptr = std::make_shared<Edge>(sampled);
-        parent->add_edge(edge_ptr);
-        last = sampled;
+        parent->add_edge(sampled);
+        std::cout << "sampled: " << *sampled << std::endl;
     }
     /** wither it reached the target node
      *
@@ -150,14 +180,12 @@ protected:
         shared_ptr<Node> target = get_end();
         shared_ptr<Node> pos = get_last();
         auto dist = distance(target, pos);
-        bool reached=(dist <= EPSILON) ? true : false;
-        return reached;
+        return (dist<=EPSILON)?true:false;
     }
-    shared_ptr<Node> last;
 
     const double STEP_SIZE;
     const int MAX_ITER;
-    const int EPSILON = 1; //TODO (adjust) END_DIST_THRESHOLD
+    const double EPSILON;
 };
 
 class ConRRT : public ConGraph {
@@ -169,15 +197,19 @@ public:
     const double MAP_WIDTH;
     const double MAP_HEIGHT;
     const double ROBOT_RADIUS;
+    const double HEIGHT_RATIO;
+    const double WIDTH_RATIO;
     //Obstacles obstacle;
-    ConRRT(vector<shared_ptr<Node>> begining, shared_ptr<Node> target, Obstacles obs, double map_width, double map_height, double step_size=0.07, int max_iter=3000, int epsilon=0.01, double robot_radius=0.009) :
+    ConRRT(vector<shared_ptr<Node>> begining, shared_ptr<Node> target, Obstacles obs, double map_width, double map_height, double step_size=0.07, int max_iter=3000, int epsilon=0.01, double robot_radius=0.009, double width_ratio=1, double height_ratio=1) :
         ConGraph(begining, target),
         MAP_WIDTH(map_width),
         MAP_HEIGHT(map_height),
         STEP_SIZE(step_size),
         MAX_ITER(max_iter),
         EPSILON(epsilon),
-        ROBOT_RADIUS(robot_radius) {
+        ROBOT_RADIUS(robot_radius),
+        WIDTH_RATIO(width_ratio),
+        HEIGHT_RATIO(height_ratio) {
         for (auto &&node : begining) {
             add_node(node);
             frontline.push_back(node);
@@ -195,8 +227,9 @@ public:
      */
     void search(shared_ptr<Node> pos) {
         int c=0;
-        while (!reached(pos) && c++<MAX_ITER) {
-            auto rand = getRandomNode();
+        //while (!reached(pos) && c++<MAX_ITER) {
+        while (!reached(pos)) {
+            auto rand = getWindowedRandomNode();
             auto near=nearest(rand);
             auto sample=newConfig(rand, near);
             bool intersect=false;
@@ -269,6 +302,32 @@ protected:
     return make_shared<Node>(p_vec);
   }
 
+shared_ptr<Node> getWindowedRandomNode() {
+        auto target = get_end();
+        auto last = nearest(target);
+        // you need the nearest to the target
+        auto last_pt = last->get_point().vector();
+        double X = last_pt(0);
+        double Y = last_pt(1);
+        //
+        double x, y;
+        Eigen::VectorXd  p_vec(2);
+        std::random_device rd;
+        do {
+            x=rd();
+            y=rd();
+            //demean(shift) the point to the center of the map at (0,0)
+            x -= (rd.max() - rd.min())/2;
+            y -= (rd.max() - rd.min())/2;
+            //scale point to map boundaries
+            //TODO (impl) if the target on the right add, otherwise subtract from (X,Y)
+            x = x/rd.max() * MAP_WIDTH/4 + X;
+            y = y/rd.max() * MAP_HEIGHT/4 + Y;
+        } while (!(x<MAP_WIDTH/(2*WIDTH_RATIO) || x>-1*MAP_WIDTH/(2*HEIGHT_RATIO)) ||
+                 !(y<MAP_HEIGHT/2 || y>-1*MAP_HEIGHT/2));
+        p_vec << x, y;
+        return make_shared<Node>(p_vec);
+    }
     //TODO (fix) adjust steps_size
     //such that newconfig is at x% of the distance
     //so you can calculate it.
@@ -300,12 +359,13 @@ protected:
     }
 
     void add(shared_ptr<Node> parent, shared_ptr<Node> sampled) {
-        static int node_index=2; // begining has id 1
-        sampled->set_id(node_index++);
-        sampled->set_parent(std::make_shared<Node>(parent));
+        int new_index = get_last()->get_id()+1;
+        sampled->set_id(new_index);
+        assert(!sampled->has_parent());
+        sampled->set_parent(parent);
         add_node(sampled);
-        std::shared_ptr<Edge> edge_ptr = std::make_shared<Edge>(sampled);
-        parent->add_edge(edge_ptr);
+        parent->add_edge(sampled);
+        std::cout << "sampled: " << *sampled << std::endl;
     }
     /** wither it reached the target node
      *
@@ -315,10 +375,9 @@ protected:
     bool reached(shared_ptr<Node> pos) {
         shared_ptr<Node> target = get_end();
         auto dist = distance(target, pos);
-        bool reached=(dist <= EPSILON) ? true : false;
-        return reached;
+        return (dist <= EPSILON) ? true : false;
     }
     const double STEP_SIZE;
     const int MAX_ITER;
-    const int EPSILON = 1; //TODO (adjust) END_DIST_THRESHOLD
+    const double EPSILON;
 };

@@ -16,11 +16,6 @@ std::ostream& operator<<(std::ostream& os, Node &n) {
      return os;
 }
 
-std::ostream& operator<<(std::ostream& os, Edge& e) {
-  os << " -> " << *(e.node) << " -< weight: " << e.weight();
-  return os;
-}
-
 std::ostream& operator<<(std::ostream &os, Graph &g) {
     int i=0;
     for (auto &&n : g.get_path()) {

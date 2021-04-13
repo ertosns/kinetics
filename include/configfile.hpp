@@ -32,7 +32,7 @@ public:
         return dict[key];
     }
     bool has(string key) {
-        return dict[key].size()>0;
+        return dict.find(key)!= dict.end();
     }
 private:
     void read_config() {
@@ -44,7 +44,7 @@ private:
         //ignore comments
         smatch m;
         //regex e("[^#][[:w:]]*=[[:d:]]*");
-        regex e("([[:w:]_]*)=([_[:w:][:d:]]*)");
+        regex e("([[:w:]_]*)=([_[:w:].[:d:]]*)");
         sregex_iterator pos(buff.cbegin(), buff.cend(), e);
         sregex_iterator end;
         for (; pos!=end; pos++) {

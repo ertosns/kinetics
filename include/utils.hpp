@@ -114,7 +114,7 @@ public:
         double weight;
         int c;
         char s[1024];
-        while(buff) {
+        while (buff) {
             if ((c=buff.get())=='#') {
                 buff.getline(s, 1024);
                 continue;
@@ -126,11 +126,16 @@ public:
             buff >> id2; buff.ignore(); // ','
             buff >> weight; buff.ignore(); // '\n'
 
-            auto edge1_ptr = make_shared<Edge>(nodes[id1-1], weight);
-            auto edge2_ptr = make_shared<Edge>(nodes[id2-1], weight);
+            auto edge1 = nodes[id1-1];
+            auto edge2 = nodes[id2-1];
+            //
+            edge1->set_weight(weight);
+            edge2->set_weight(weight);
+            //auto edge1_ptr = make_shared<Node>(nodes[id1-1], weight);
+            //auto edge2_ptr = make_shared<Node>(nodes[id2-1], weight);
 
-            nodes[id1-1]->add_edge(edge2_ptr);
-            nodes[id2-1]->add_edge(edge1_ptr);
+            edge1->add_edge(edge2);
+            edge2->add_edge(edge1);
         }
         f.close();
         return;
@@ -164,7 +169,6 @@ public:
         f.close();
         return obstacles;
     }
-
     AsGraph* construct_graph() {
         read_nodes();
         read_edges();
@@ -194,12 +198,32 @@ public:
         string STEP_SIZE("step_size");
         string ROBOT_RADIUS("robot_radius");
         string EPSILON("epsilon");
-        int max_iter = C.has(MAX_ITER)? std::stoi(C[MAX_ITER]) : 2000;
-        float step_size = C.has(STEP_SIZE)? std::stof(C[STEP_SIZE]) : 0.08;
-        float robot_radius = C.has(ROBOT_RADIUS)? std::stof(C[ROBOT_RADIUS]) : 0.009;
-        float epsilon = C.has(EPSILON)? std::stof(C[EPSILON]) : 0.01;
-        //auto rrt = new RRT(begin, end, obstacles, 1, 1,step_size, max_iter, epsilon, robot_radius);
-        auto rrt = new RRT(begin, end, obstacles, 1, 1);
+        string WIDTH("width");
+        string HEIGHT("height");
+        string WIDTH_RATIO("window_width_ratio");
+        string HEIGHT_RATIO("window_height_ratio");
+        //
+        string iter = C[MAX_ITER];
+        string step = C[STEP_SIZE];
+        string rad = C[ROBOT_RADIUS];
+        string eps = C[EPSILON];
+        string h = C[HEIGHT];
+        string w = C[WIDTH];
+        string wwr = C[WIDTH_RATIO];
+        string whr = C[HEIGHT_RATIO];
+        //
+        int max_iter = C.has(MAX_ITER) ? std::stoi(iter) : 2000;
+        float step_size = C.has(STEP_SIZE) ? std::stof(step) : 0.08;
+        float robot_radius = C.has(ROBOT_RADIUS) ? std::stof(rad) : 0.009;
+        float epsilon = C.has(EPSILON) ? std::stof(eps) : 0.01;
+        //
+        float height = C.has(HEIGHT) ? std::stof(h) : 1;
+        float width = C.has(WIDTH) ? std::stof(w) : 1;
+        //
+        float width_ratio = C.has(WIDTH_RATIO) ? std::stof(wwr) : 2;
+        float height_ratio = C.has(HEIGHT_RATIO) ? std::stof(whr) : 2;
+        //
+        auto rrt = new RRT(begin, end, obstacles, width, height, step_size, max_iter, epsilon, robot_radius, width_ratio, height_ratio);
         return rrt;
     }
 
@@ -228,11 +252,32 @@ public:
         string STEP_SIZE("step_size");
         string ROBOT_RADIUS("robot_radius");
         string EPSILON("epsilon");
-        int max_iter = C.has(MAX_ITER)? std::stoi(C[MAX_ITER]) : 2000;
-        float step_size = C.has(STEP_SIZE)? std::stof(C[STEP_SIZE]) : 0.08;
-        float robot_radius = C.has(ROBOT_RADIUS)? std::stof(C[ROBOT_RADIUS]) : 0.009;
-        float epsilon = C.has(EPSILON)? std::stof(C[EPSILON]) : 0.01;
-        auto conrrt = new ConRRT(beginings, end, obstacles, 1, 1, step_size, max_iter, epsilon, robot_radius);
+        string WIDTH("width");
+        string HEIGHT("height");
+        string WIDTH_RATIO("window_width_ratio");
+        string HEIGHT_RATIO("window_height_ratio");
+        //
+        string iter = C[MAX_ITER];
+        string step = C[STEP_SIZE];
+        string rad = C[ROBOT_RADIUS];
+        string eps = C[EPSILON];
+        string h = C[HEIGHT];
+        string w = C[WIDTH];
+        string wwr = C[WIDTH_RATIO];
+        string whr = C[HEIGHT_RATIO];
+        //
+        int max_iter = C.has(MAX_ITER) ? std::stoi(iter) : 2000;
+        float step_size = C.has(STEP_SIZE) ? std::stof(step) : 0.08;
+        float robot_radius = C.has(ROBOT_RADIUS) ? std::stof(rad) : 0.009;
+        float epsilon = C.has(EPSILON) ? std::stof(eps) : 0.01;
+        //
+        float height = C.has(HEIGHT) ? std::stof(h) : 1;
+        float width = C.has(WIDTH) ? std::stof(w) : 1;
+        //
+        float width_ratio = C.has(WIDTH_RATIO) ? std::stof(wwr) : 2;
+        float height_ratio = C.has(HEIGHT_RATIO) ? std::stof(whr) : 2;
+        //
+        auto conrrt = new ConRRT(beginings, end, obstacles, width, height, step_size, max_iter, epsilon, robot_radius, width_ratio, height_ratio);
         return conrrt;
     }
 

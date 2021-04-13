@@ -49,12 +49,12 @@ private:
         current->close();
 
         for (auto &&e : current->get_edges()) {
-            if (e->get_node()->has_parent())
-                std::cout << "||verify parent of: ("<< e->get_node()->id
-                          << ") is (" <<  e->get_node()->get_parent_id()
+            if (e->has_parent())
+                std::cout << "||verify parent of: ("<< e->id
+                          << ") is (" <<  e->get_parent_id()
                           << ")" << std::endl;
             else
-                std::cout << "||verify parent of: ("<< e->get_node()->id
+                std::cout << "||verify parent of: ("<< e->id
                           << ") is (" <<  " no parent! " << ")"
                           << std::endl;
         }
@@ -71,18 +71,18 @@ private:
     void update_neighbours(shared_ptr<Node> current) {
         //current->apply_edge([current] //
         for (auto &&e : current->get_edges()) {
-            if (!e->get_node()->open())
+            if (!e->open())
                 return;
             double tentative_cost = e->weight() + current->get_cost();
-            if (tentative_cost < e->get_node()->get_cost()) {
-                e->get_node()->set_cost(tentative_cost);
+            if (tentative_cost < e->get_cost()) {
+                e->set_cost(tentative_cost);
                 //
-                e->get_node()->set_parent(current);
-                if (e->get_node()->id==get_end()->id) {
-                    //path_e=e->get_node();
-                    set_end(e->get_node());
+                e->set_parent(current);
+                if (e->id==get_end()->id) {
+                    //path_e=e;
+                    set_end(e);
                 }
-                std::cout << "|--> parent of (" << e->get_node()->id << ") is (" << e->get_node()->get_parent_id() << ")" << std::endl;
+                std::cout << "|--> parent of (" << e->id << ") is (" << e->get_parent_id() << ")" << std::endl;
             }
         }
         std::sort(opened.begin(), opened.end(),
